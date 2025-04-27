@@ -135,9 +135,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 353281516916931003, guid: 0d42cdaf56cae044ba8ff69f0cfdf945, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -2290.084
+    - target: {fileID: 4252033935876997603, guid: 0d42cdaf56cae044ba8ff69f0cfdf945, type: 3}
+      propertyPath: m_Name
+      value: TestCube
+      objectReference: {fileID: 0}
+    - target: {fileID: 4297001006454868172, guid: 0d42cdaf56cae044ba8ff69f0cfdf945, type: 3}
+      propertyPath: m_Name
+      value: TestCube
+      objectReference: {fileID: 0}
+    - target: {fileID: 4617583267590031967, guid: 0d42cdaf56cae044ba8ff69f0cfdf945, type: 3}
+      propertyPath: m_Name
+      value: TestSphere
       objectReference: {fileID: 0}
     - target: {fileID: 4674086512919189036, guid: 0d42cdaf56cae044ba8ff69f0cfdf945, type: 3}
       propertyPath: m_LocalPosition.x
@@ -178,6 +186,10 @@ PrefabInstance:
     - target: {fileID: 4674086512919189036, guid: 0d42cdaf56cae044ba8ff69f0cfdf945, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5740596831923265113, guid: 0d42cdaf56cae044ba8ff69f0cfdf945, type: 3}
+      propertyPath: m_Name
+      value: TestCube
       objectReference: {fileID: 0}
     - target: {fileID: 8435204558534527376, guid: 0d42cdaf56cae044ba8ff69f0cfdf945, type: 3}
       propertyPath: m_Name
