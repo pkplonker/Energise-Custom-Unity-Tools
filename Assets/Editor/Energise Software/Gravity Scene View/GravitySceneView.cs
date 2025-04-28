@@ -232,7 +232,7 @@ namespace GravitySceneView
 			EditorGUI.EndDisabledGroup();
 		}
 
-		private string GetKeyString() => dropMod == EventModifiers.None ? "{dropMod}+{dropKey}" : "{dropKey}";
+		private string GetKeyString() => dropMod == EventModifiers.None ? $"{dropMod}+{dropKey}" : $"{dropKey}";
 
 		private void OnSceneGUI(SceneView sceneView)
 		{
