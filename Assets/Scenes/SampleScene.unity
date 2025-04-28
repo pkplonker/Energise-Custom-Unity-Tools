@@ -191,6 +191,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: TestCube
       objectReference: {fileID: 0}
+    - target: {fileID: 7965599803872547379, guid: 0d42cdaf56cae044ba8ff69f0cfdf945, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 1.61
+      objectReference: {fileID: 0}
+    - target: {fileID: 7965599803872547379, guid: 0d42cdaf56cae044ba8ff69f0cfdf945, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 3.1
+      objectReference: {fileID: 0}
     - target: {fileID: 8435204558534527376, guid: 0d42cdaf56cae044ba8ff69f0cfdf945, type: 3}
       propertyPath: m_Name
       value: DemoScene
