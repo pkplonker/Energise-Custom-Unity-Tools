@@ -77,7 +77,7 @@ namespace Measure
 
 		#endregion
 
-		[MenuItem("Window/3D Measure &%m")]
+		[MenuItem("Window/Energise Tools/3D Measure &%m")]
 		public static void ShowWindow() => GetWindow<MeasureEditor>("Measure Editor");
 
 		private void OnEnable() => Setup();

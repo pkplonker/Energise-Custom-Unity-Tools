@@ -1,0 +1,18 @@
+{
+    "name": "CustomTickEditor",
+    "rootNamespace": "CustomTick.Editor",
+    "references": [
+        "GUID:8147f09133aa3f443880486993dce7b5"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
