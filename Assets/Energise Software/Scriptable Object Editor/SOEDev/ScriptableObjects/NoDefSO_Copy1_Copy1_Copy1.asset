@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: NoDefSO_Copy1_Copy1_Copy1
   m_EditorClassIdentifier: 
   TestString: 
-  TestShader: {fileID: 0}
+  TestShader: {fileID: 4800000, guid: cf81c85f95fe47e1a27f6ae460cf182c, type: 3}
   TestMaterial: {fileID: 0}
   TestCamera: {fileID: 0}
   TestColor: {r: 0, g: 0, b: 0, a: 0}
