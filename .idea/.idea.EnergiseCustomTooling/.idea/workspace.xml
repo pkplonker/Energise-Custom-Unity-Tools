@@ -105,7 +105,7 @@
       <option name="presentableId" value="Default" />
       <updated>1746224202112</updated>
       <workItem from="1746224202818" duration="3148000" />
-      <workItem from="1746822908001" duration="5999000" />
+      <workItem from="1746822908001" duration="6371000" />
     </task>
     <servers />
   </component>
@@ -122,5 +122,24 @@
   <component name="VcsManagerConfiguration">
     <option name="LOCAL_CHANGES_DETAILS_PREVIEW_SHOWN" value="false" />
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DotNet Breakpoints">
+          <url>file://$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/Editor/ScriptableObjectEditor.cs</url>
+          <line>320</line>
+          <properties documentPath="S:\Users\pkplo\OneDrive\Documents\UnityProjects\EnergiseCustomTooling\Assets\Energise Software\Scriptable Object Editor\Editor\ScriptableObjectEditor.cs" containingFunctionPresentation="Method 'ApplySorting'">
+            <startOffsets>
+              <option value="9882" />
+            </startOffsets>
+            <endOffsets>
+              <option value="10074" />
+            </endOffsets>
+          </properties>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

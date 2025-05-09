@@ -262,9 +262,7 @@ namespace ScriptableObjectEditor
 			if (GUILayout.Button(EditorGUIUtility.IconContent("d_Toolbar Plus"), GUILayout.Width(30),
 				    GUILayout.Height(18)))
 			{
-				
-					CreateNewInstance(createCount);
-				
+				CreateNewInstance(createCount);
 			}
 
 			EditorGUILayout.EndHorizontal();
@@ -318,9 +316,28 @@ namespace ScriptableObjectEditor
 					if (propIndex < paths.Count)
 					{
 						string path = paths[propIndex];
-						currentTypeObjects = (sortAscending
-							? currentTypeObjects.OrderBy(o => GetPropertyValue(o, path))
-							: currentTypeObjects.OrderByDescending(o => GetPropertyValue(o, path))).ToList();
+						var so = new SerializedObject(currentTypeObjects[0]);
+						var prop = so.FindProperty(path);
+						if (prop.propertyType == SerializedPropertyType.Color)
+						{
+							currentTypeObjects = (sortAscending
+								? currentTypeObjects.OrderBy(o =>
+								{
+									var c = new SerializedObject(o).FindProperty(path).colorValue;
+									return c.r + c.g + c.b + c.a;
+								})
+								: currentTypeObjects.OrderByDescending(o =>
+								{
+									var c = new SerializedObject(o).FindProperty(path).colorValue;
+									return c.r + c.g + c.b + c.a;
+								})).ToList();
+						}
+						else
+						{
+							currentTypeObjects = (sortAscending
+								? currentTypeObjects.OrderBy(o => GetPropertyValue(o, path))
+								: currentTypeObjects.OrderByDescending(o => GetPropertyValue(o, path))).ToList();
+						}
 					}
 				}
 			}
