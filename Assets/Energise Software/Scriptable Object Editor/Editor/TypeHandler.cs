@@ -9,16 +9,16 @@ using UnityEngine.Profiling;
 
 namespace ScriptableObjectEditor
 {
-	public static class TypeHandler
+	internal static class TypeHandler
 	{
-		public static MemoryStats MemoryStats { get; private set; } = null;
-		public static string[] TypeNames { get; private set; } = null;
+		internal static MemoryStats MemoryStats { get; private set; } = null;
+		internal static string[] TypeNames { get; private set; } = null;
 		private static List<Assembly> AvailableAssemblies = new();
-		public static List<ScriptableObject> CurrentTypeObjects = new();
-		public static List<Type> ScriptableObjectTypes;
-		public static string[] AssemblyNames;
+		internal static List<ScriptableObject> CurrentTypeObjects = new();
+		internal static List<Type> ScriptableObjectTypes;
+		internal static string[] AssemblyNames;
 
-		public static void LoadObjectsOfType(Type type, SelectionParams selectionParams)
+		internal static void LoadObjectsOfType(Type type, SelectionParams selectionParams)
 		{
 			MemoryStats ??= new MemoryStats();
 			CurrentTypeObjects.Clear();
@@ -58,7 +58,7 @@ namespace ScriptableObjectEditor
 				MemoryStats.totalMemoryFiltered += MemoryStats.memoryUsage[obj];
 		}
 
-		public static void LoadAvailableAssemblies(SelectionParams selectionParams)
+		internal static void LoadAvailableAssemblies(SelectionParams selectionParams)
 		{
 			AvailableAssemblies = GetAssembliesWithScriptableObjects(selectionParams);
 			AssemblyNames = AvailableAssemblies
@@ -67,7 +67,7 @@ namespace ScriptableObjectEditor
 				.ToArray();
 		}
 
-		public static void LoadScriptableObjectTypes(SelectionParams selectionParams)
+		internal static void LoadScriptableObjectTypes(SelectionParams selectionParams)
 		{
 			IEnumerable<Type> types = selectionParams.selectedAssemblyIndex == 0
 				? AvailableAssemblies.SelectMany(a => a.GetTypes())
@@ -91,7 +91,7 @@ namespace ScriptableObjectEditor
 			selectionParams.selectedTypeIndex = Mathf.Clamp(selectionParams.selectedTypeIndex, 0, TypeNames.Length - 1);
 		}
 
-		public static IComparable GetPropertyValue(ScriptableObject o, string path)
+		internal static IComparable GetPropertyValue(ScriptableObject o, string path)
 		{
 			var so = new SerializedObject(o);
 			var prop = so.FindProperty(path);
@@ -108,7 +108,7 @@ namespace ScriptableObjectEditor
 			}
 		}
 
-		public static void CreateNewInstance(int count, Type type, string defaultFolder, int selectedTypeIndex)
+		internal static void CreateNewInstance(int count, Type type, string defaultFolder, int selectedTypeIndex)
 		{
 			if (selectedTypeIndex < 0 || selectedTypeIndex >= ScriptableObjectTypes.Count) return;
 
@@ -141,7 +141,7 @@ namespace ScriptableObjectEditor
 			AssetDatabase.SaveAssets();
 		}
 
-		public static void Load(SelectionParams selectionParams)
+		internal static void Load(SelectionParams selectionParams)
 		{
 			LoadAvailableAssemblies(selectionParams);
 			LoadScriptableObjectTypes(selectionParams);

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a587ca8e893a1c489975c9376a2ef22, type: 3}
   m_Name: Type2 (2)
   m_EditorClassIdentifier: 
-  TestString: 123
+  TestString: 123456
   TestShader: {fileID: 10101, guid: 0000000000000000e000000000000000, type: 0}
   TestMaterial: {fileID: 10756, guid: 0000000000000000e000000000000000, type: 0}
   TestCamera: {fileID: 0}

@@ -3,10 +3,10 @@ using UnityEngine;
 
 namespace ScriptableObjectEditor
 {
-	public class MemoryStats
+	internal class MemoryStats
 	{
-		public Dictionary<ScriptableObject, long> memoryUsage = new();
-		public long totalMemoryAll = 0;
-		public long totalMemoryFiltered = 0;
+		internal Dictionary<ScriptableObject, long> memoryUsage = new();
+		internal long totalMemoryAll = 0;
+		internal long totalMemoryFiltered = 0;
 	}
 }

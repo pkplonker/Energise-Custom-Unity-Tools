@@ -16,4 +16,4 @@ MonoBehaviour:
   TestShader: {fileID: 0}
   TestMaterial: {fileID: 0}
   TestCamera: {fileID: 0}
-  TestColor: {r: 0, g: 0, b: 0, a: 0}
+  TestColor: {r: 1, g: 0, b: 0, a: 0}

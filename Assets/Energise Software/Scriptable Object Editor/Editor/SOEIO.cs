@@ -5,9 +5,9 @@ using UnityEngine;
 
 namespace ScriptableObjectEditor
 {
-	public static class SOEIO
+	internal static class SOEIO
 	{
-		public static bool TryGetUniqueAssetPath(string originalPath, out string uniquePath)
+		internal static bool TryGetUniqueAssetPath(string originalPath, out string uniquePath)
 		{
 			uniquePath = null;
 			try
@@ -57,7 +57,7 @@ namespace ScriptableObjectEditor
 			AssetDatabase.SaveAssets();
 		}
 
-		public static void RemoveAssets(List<ScriptableObject> toRemove)
+		internal static void RemoveAssets(List<ScriptableObject> toRemove)
 		{
 			foreach (var obj in toRemove)
 			{
@@ -65,7 +65,7 @@ namespace ScriptableObjectEditor
 			}
 		}
 
-		public static void AddAssets(List<ScriptableObject> toAdd)
+		internal static void AddAssets(List<ScriptableObject> toAdd)
 		{
 			foreach (var add in toAdd)
 			{

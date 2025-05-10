@@ -3,11 +3,11 @@ using UnityEditor;
 
 namespace ScriptableObjectEditor
 {
-	public class SOERegion : IDisposable
+	internal class SOERegion : IDisposable
 	{
 		private readonly bool isVertical;
 
-		public SOERegion(bool b = false)
+		internal SOERegion(bool b = false)
 		{
 			isVertical = b;
 			if (isVertical) EditorGUILayout.BeginVertical();

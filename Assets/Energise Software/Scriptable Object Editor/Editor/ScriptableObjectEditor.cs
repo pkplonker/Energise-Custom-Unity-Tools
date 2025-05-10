@@ -1,6 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -24,6 +25,14 @@ namespace ScriptableObjectEditor
 		private bool sortAscending = true;
 		private Dictionary<string, bool> regions = new();
 		private int createCount;
+
+		private List<Header> DefaultHeaders = new()
+		{
+			new Header("Copy", 35),
+			new Header("Delete", 50),
+			new Header("Instance Name", 150),
+		};
+
 		private static SelectionParams selectionParams;
 
 		[MenuItem("Window/Energise Tools/Scriptable Object Editor &%S")]
@@ -80,15 +89,17 @@ namespace ScriptableObjectEditor
 			using (new SOERegion(true))
 			{
 				EditorGUILayout.LabelField("Asset Management", EditorStyles.boldLabel);
-				var expand = Fold("Assemblies");
+				var expand = Fold("Assemblies", "Options for finding scriptable assets");
 				if (expand)
 				{
 					using (new SOERegion())
 					{
-						EditorGUILayout.LabelField("Path", GUILayout.Width(40));
+						EditorGUILayout.LabelField(new GUIContent("Path", "Where to search for scriptable assets"),
+							GUILayout.Width(40));
 						selectionParams.assetsFolderPath =
 							EditorGUILayout.TextField(selectionParams.assetsFolderPath, GUILayout.Width(200));
-						if (GUILayout.Button("Browse", GUILayout.Width(80)))
+						if (GUILayout.Button(new GUIContent("Browse", "Select folder to search for scriptable assets"),
+							    GUILayout.Width(80)))
 						{
 							string sel = EditorUtility.OpenFolderPanel("Select Scriptable Object Folder",
 								selectionParams.assetsFolderPath, "");
@@ -102,7 +113,6 @@ namespace ScriptableObjectEditor
 						if (GUILayout.Button(EditorGUIUtility.IconContent("d_Refresh"), GUILayout.Width(35)))
 						{
 							TypeHandler.LoadAvailableAssemblies(selectionParams);
-
 							RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes.FirstOrDefault());
 						}
 
@@ -140,7 +150,8 @@ namespace ScriptableObjectEditor
 
 				using (new SOERegion())
 				{
-					EditorGUILayout.LabelField("Type", GUILayout.Width(40));
+					EditorGUILayout.LabelField(new GUIContent("Type", "The currently selected scriptableobject type"),
+						GUILayout.Width(40));
 					int newTypeIdx =
 						EditorGUILayout.Popup(selectedTypeIndex, TypeHandler.TypeNames, GUILayout.Width(200));
 					if (newTypeIdx != selectedTypeIndex)
@@ -150,9 +161,12 @@ namespace ScriptableObjectEditor
 					}
 
 					selectionParams.includeDerivedTypes =
-						EditorGUILayout.ToggleLeft("Include Derived", selectionParams.includeDerivedTypes,
+						EditorGUILayout.ToggleLeft(
+							new GUIContent("Include Derived", "Tick to include inherited/derived types in view"),
+							selectionParams.includeDerivedTypes,
 							GUILayout.Width(120));
-					EditorGUILayout.LabelField("Filter Types", GUILayout.Width(80));
+					EditorGUILayout.LabelField(new GUIContent("Filter Types", "Text filtering of types to display"),
+						GUILayout.Width(80));
 
 					var newTypeSearch =
 						EditorGUILayout.TextField(selectionParams.typeSearchString, GUILayout.Width(200));
@@ -166,7 +180,9 @@ namespace ScriptableObjectEditor
 
 				using (new SOERegion())
 				{
-					EditorGUILayout.LabelField("Filter Instances", GUILayout.Width(100));
+					EditorGUILayout.LabelField(
+						new GUIContent("Filter Instances", "Only show instances matching the filter text"),
+						GUILayout.Width(100));
 					var newInstSearch =
 						EditorGUILayout.TextField(selectionParams.instanceSearchString, GUILayout.Width(200));
 					if (newInstSearch != selectionParams.instanceSearchString)
@@ -201,9 +217,9 @@ namespace ScriptableObjectEditor
 			EditorGUILayout.EndScrollView();
 		}
 
-		private bool Fold(string key)
+		private bool Fold(string key, string optionalTooltip = "")
 		{
-			var val = EditorGUILayout.Foldout(GetExpandedRegion(key), key);
+			var val = EditorGUILayout.Foldout(GetExpandedRegion(key), new GUIContent(key, optionalTooltip));
 			regions[key] = val;
 			return val;
 		}
@@ -319,32 +335,36 @@ namespace ScriptableObjectEditor
 			if (!TypeHandler.CurrentTypeObjects.Any()) return;
 
 			var firstSO = new SerializedObject(TypeHandler.CurrentTypeObjects[0]);
-			var iter = firstSO.GetIterator();
-			var propertyPaths = new List<string>();
-			if (iter.NextVisible(true))
-				do
-				{
-					propertyPaths.Add(iter.propertyPath);
-				} while (iter.NextVisible(false));
+			var propertyPaths = GetPropertyPaths(firstSO.GetIterator());
 
-			int totalCols = 3 + propertyPaths.Count;
+			int totalCols = DefaultHeaders.Count + propertyPaths.Count;
 			if (columnWidths.Count != totalCols)
 			{
 				columnWidths.Clear();
-				columnWidths.Add(35);
-				columnWidths.Add(35);
-				columnWidths.Add(150);
+				foreach (var header in DefaultHeaders)
+				{
+					columnWidths.Add(header.Width);
+				}
+
 				foreach (var path in propertyPaths)
+				{
 					columnWidths.Add(Mathf.Max(100, path.Length * 10));
+				}
 			}
 
 			using (new SOERegion())
 			{
-				DrawHeaderCell("Actions", columnWidths[0], 0);
-				DrawHeaderCell("Delete", columnWidths[1], 1);
-				DrawHeaderCell("Instance Name", columnWidths[2], 2);
+				int index = 0;
+				foreach (var header in DefaultHeaders)
+				{
+					DrawHeaderCell(header.Label, columnWidths[index], index);
+					index++;
+				}
+
 				for (int i = 0; i < propertyPaths.Count; i++)
-					DrawHeaderCell(propertyPaths[i], columnWidths[i + 3], i + 3);
+				{
+					DrawHeaderCell(propertyPaths[i], columnWidths[i + DefaultHeaders.Count], i + DefaultHeaders.Count);
+				}
 			}
 
 			var toAdd = new List<ScriptableObject>();
@@ -358,10 +378,16 @@ namespace ScriptableObjectEditor
 					if (GUILayout.Button(EditorGUIUtility.IconContent("d_Toolbar Plus"),
 						    GUILayout.Width(columnWidths[0]),
 						    GUILayout.Height(18)))
+					{
 						toAdd.Add(obj);
+					}
+
 					if (GUILayout.Button(EditorGUIUtility.IconContent("d_TreeEditor.Trash"),
 						    GUILayout.Width(columnWidths[1]), GUILayout.Height(18)))
+					{
 						toRemove.Add(obj);
+					}
+
 					EditorGUILayout.LabelField(obj.name, EditorStyles.textField, GUILayout.Width(columnWidths[2]));
 
 					for (int i = 0; i < propertyPaths.Count; i++)
@@ -421,6 +447,20 @@ namespace ScriptableObjectEditor
 
 			SOEIO.AddAssets(toAdd);
 			SOEIO.RemoveAssets(toRemove);
+		}
+
+		private static List<string> GetPropertyPaths(SerializedProperty iter)
+		{
+			var propertyPaths = new List<string>();
+			if (iter.NextVisible(true))
+			{
+				do
+				{
+					propertyPaths.Add(iter.propertyPath);
+				} while (iter.NextVisible(false));
+			}
+
+			return propertyPaths;
 		}
 	}
 }
