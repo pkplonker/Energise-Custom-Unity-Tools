@@ -40,6 +40,7 @@ namespace ScriptableObjectEditor
 		private int lastClickedRow = -1;
 		private float cellPadding = 4;
 		private int tabChoice;
+		private List<Tab> tabs;
 
 		[MenuItem("Window/Energise Tools/Scriptable Object Editor &%S")]
 		public static void ShowWindow() => GetWindow<ScriptableObjectEditorWindow>("Scriptable Object Editor");
@@ -55,7 +56,16 @@ namespace ScriptableObjectEditor
 			window.RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[window.selectedTypeIndex]);
 			window.Repaint();
 		}
-
+		private struct Tab
+		{
+			public string Label;
+			public Action Draw;
+			public Tab(string label, Action draw)
+			{
+				Label = label;
+				Draw  = draw;
+			}
+		}
 		private void OnEnable()
 		{
 			InitializeColumns();
@@ -64,6 +74,14 @@ namespace ScriptableObjectEditor
 				{selectedTypeIndex = window.selectedTypeIndex, selectedAssemblyIndex = window.selectedAssemblyIndex};
 			TypeHandler.Load(selectionParams);
 			RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes.FirstOrDefault());
+			tabs = new List<Tab>()
+			{
+				new Tab("Hide",             () => { }),
+				new Tab("Asset Management", DrawAssetManagement),
+				new Tab("Stats",            DrawStats),
+				new Tab("Info",             RenderInfo),
+			};
+			tabChoice = SOEPrefs.Load<int>("tabChoice", 0);
 		}
 
 		private void InitializeColumns()
@@ -205,24 +223,19 @@ namespace ScriptableObjectEditor
 		{
 			using (new SOERegion(true))
 			{
-				EditorGUILayout.LabelField("Asset Management", EditorStyles.boldLabel);
-				string[] tabs = new[] {"Asset Management", "Stats"};
-				tabChoice = GUILayout.Toolbar(tabChoice, tabs, GUILayout.Height(24));
-
-				if (tabChoice == 0)
-				{
-					DrawAssetManagement();
-				}
-				else if (tabChoice == 1)
-				{
-					DrawStats();
-				}
+				string[] labels = tabs.Select(t => t.Label).ToArray();
+				tabChoice = GUILayout.Toolbar(tabChoice, labels, GUILayout.Height(16));
+				SOEPrefs.Save("tabChoice", tabChoice);
+				tabs[tabChoice].Draw();
 
 				EditorGUILayout.Space();
 
 				using (new SOERegion())
 				{
-					if (GUILayout.Button(EditorGUIUtility.IconContent("d_Toolbar Plus"), GUILayout.Width(30),
+					if (GUILayout.Button(EditorGUIUtility.IconContent(
+							    "d_Toolbar Plus",
+							    "Add new instances"
+						    ), GUILayout.Width(30),
 						    GUILayout.Height(18)))
 					{
 						Type type = TypeHandler.ScriptableObjectTypes[selectedTypeIndex];
@@ -231,8 +244,22 @@ namespace ScriptableObjectEditor
 						RefreshObjectsOfType(type);
 					}
 
-					createCount = EditorGUILayout.IntField(createCount, GUILayout.Width(40));
+					createCount = EditorGUILayout.IntField(new GUIContent(
+						"",
+						"How many items should be created?"
+					), createCount, GUILayout.Width(40));
 					createCount = Mathf.Max(1, createCount);
+					using (new SOERegion())
+					{
+						GUILayout.Label("Filter Instances:", GUILayout.Width(100));
+						var newInstSearch =
+							GUILayout.TextField(selectionParams.instanceSearchString, GUILayout.Width(200));
+						if (newInstSearch != selectionParams.instanceSearchString)
+						{
+							selectionParams.instanceSearchString = newInstSearch;
+							RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[selectedTypeIndex]);
+						}
+					}
 				}
 			}
 
@@ -256,7 +283,7 @@ namespace ScriptableObjectEditor
 
 		private static void DrawStats()
 		{
-			using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+			using (new EditorGUILayout.VerticalScope())
 			{
 				GUILayout.Label($"Count: {TypeHandler.CurrentTypeObjects.Count}", GUILayout.Width(100));
 				GUILayout.Label($"Total Memory: {TypeHandler.MemoryStats.totalMemoryAll / 1024f:F1} KB",
@@ -268,7 +295,7 @@ namespace ScriptableObjectEditor
 
 		private void DrawAssetManagement()
 		{
-			using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+			using (new EditorGUILayout.VerticalScope())
 			{
 				using (new SOERegion())
 				{
@@ -307,13 +334,35 @@ namespace ScriptableObjectEditor
 
 				using (new SOERegion())
 				{
-					GUILayout.Label("Displayed Type", GUILayout.Width(100));
-					int newTypeIdx = EditorGUILayout.Popup(selectedTypeIndex, TypeHandler.TypeNames,
-						GUILayout.Width(200));
-					if (newTypeIdx != selectedTypeIndex)
+					GUILayout.Label("Type", GUILayout.Width(40));
+					GUILayout.Label("Search:", GUILayout.Width(50));
+					string newTypeFilter = GUILayout.TextField(selectionParams.typeSearchString, GUILayout.Width(100));
+					if (newTypeFilter != selectionParams.typeSearchString)
 					{
-						selectedTypeIndex = newTypeIdx;
-						RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[selectedTypeIndex]);
+						selectionParams.typeSearchString = newTypeFilter;
+						TypeHandler.LoadScriptableObjectTypes(selectionParams);
+					}
+
+					var filteredNames = TypeHandler.TypeNames
+						.Where(n => n.IndexOf(selectionParams.typeSearchString, StringComparison.OrdinalIgnoreCase) >=
+						            0)
+						.ToArray();
+					int[] originalIndexes = TypeHandler.TypeNames
+						.Select((n, idx) => new {n, idx})
+						.Where(x => filteredNames.Contains(x.n))
+						.Select(x => x.idx)
+						.ToArray();
+					int selInFiltered = Array.IndexOf(originalIndexes, selectedTypeIndex);
+					int newSelInFiltered = EditorGUILayout.Popup(selInFiltered >= 0 ? selInFiltered : 0, filteredNames,
+						GUILayout.Width(200));
+					if (newSelInFiltered >= 0 && newSelInFiltered < originalIndexes.Length)
+					{
+						int newTypeIdx = originalIndexes[newSelInFiltered];
+						if (newTypeIdx != selectedTypeIndex)
+						{
+							selectedTypeIndex = newTypeIdx;
+							RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[selectedTypeIndex]);
+						}
 					}
 
 					EditorGUI.BeginChangeCheck();
@@ -323,30 +372,6 @@ namespace ScriptableObjectEditor
 					{
 						selectionParams.includeDerivedTypes = inc;
 						TypeHandler.LoadScriptableObjectTypes(selectionParams);
-						RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[selectedTypeIndex]);
-					}
-				}
-
-				using (new SOERegion())
-				{
-					GUILayout.Label("Filter Types:", GUILayout.Width(80));
-					var newTypeSearch = GUILayout.TextField(selectionParams.typeSearchString, GUILayout.Width(200));
-					if (newTypeSearch != selectionParams.typeSearchString)
-					{
-						selectionParams.typeSearchString = newTypeSearch;
-						TypeHandler.LoadScriptableObjectTypes(selectionParams);
-						RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes.FirstOrDefault());
-					}
-				}
-
-				using (new SOERegion())
-				{
-					GUILayout.Label("Filter Instances:", GUILayout.Width(100));
-					var newInstSearch =
-						GUILayout.TextField(selectionParams.instanceSearchString, GUILayout.Width(200));
-					if (newInstSearch != selectionParams.instanceSearchString)
-					{
-						selectionParams.instanceSearchString = newInstSearch;
 						RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[selectedTypeIndex]);
 					}
 				}
@@ -690,6 +715,29 @@ namespace ScriptableObjectEditor
 				} while (iter.NextVisible(false));
 
 			return paths;
+		}
+
+		private static void RenderInfo()
+		{
+			var infoStyle = new GUIStyle(EditorStyles.label)
+			{
+				alignment = TextAnchor.MiddleCenter,
+				fontStyle = FontStyle.Bold,
+				wordWrap = true
+			};
+			EditorGUILayout.Separator();
+			EditorGUILayout.Separator();
+
+			EditorGUILayout.LabelField("Scriptable Objects Editor", infoStyle);
+			infoStyle.fontStyle = FontStyle.Normal;
+			EditorGUILayout.LabelField(
+				"Thanks for using our Scriptable Objects Editor.",
+				infoStyle);
+			EditorGUILayout.Separator();
+
+			EditorGUILayout.LabelField(
+				"Any comments, requests, feedback, please email: EnergiseTools@gmail.com\n\n Thanks, Stuart Heath (Energise Software)",
+				infoStyle);
 		}
 	}
 }

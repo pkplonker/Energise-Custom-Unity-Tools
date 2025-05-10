@@ -5,7 +5,7 @@ namespace ScriptableObjectEditor
 		public string instanceSearchString = string.Empty;
 		public bool includeDerivedTypes = true;
 		public string assetsFolderPath = "Assets";
-		public string typeSearchString;
+		public string typeSearchString = string.Empty;
 		public int selectedTypeIndex;
 		public int selectedAssemblyIndex;
 	}

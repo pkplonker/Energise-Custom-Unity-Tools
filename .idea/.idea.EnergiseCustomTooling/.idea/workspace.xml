@@ -33,6 +33,7 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/50e19b0ed93a4256b2e454b4acec2d48958800/45/2868b240/SceneView.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/50e19b0ed93a4256b2e454b4acec2d48958800/66/b9dd6e38/EditorGUILayout.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/50e19b0ed93a4256b2e454b4acec2d48958800/70/5b15c4a7/EditorGUIUtility.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/50e19b0ed93a4256b2e454b4acec2d48958800/e3/295c7390/EditorStyles.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7ec34a9fe0b043f08800d3612cbf36c3179e00/0f/6ed0f422/RenderChain.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7ec34a9fe0b043f08800d3612cbf36c3179e00/df/2f35d7fe/IMGUIContainer.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/8ce0bd04a7a04b4b9395538239d3fdd846ac00/43/702da463/ThrowHelper.cs" root0="FORCE_HIGHLIGHTING" />
@@ -50,21 +51,21 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Attach to Unity Editor.Attach to Unity Editor.executor": "Debug",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "XThreadsFramesViewSplitterKey": "0.49170732",
-    "git-widget-placeholder": "main",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.sourceCode.C#",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Attach to Unity Editor.Attach to Unity Editor.executor&quot;: &quot;Debug&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;XThreadsFramesViewSplitterKey&quot;: &quot;0.49170732&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.sourceCode.C#&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="Attach to Unity Editor.Attach to Unity Editor">
     <configuration name="Start Unity" type="RunUnityExe" factoryName="Unity Executable">
       <option name="EXE_PATH" value="S:\Program Files\Unity\Hub\Editor\2022.3.44f1\Editor\Unity.exe" />
@@ -92,10 +93,10 @@
       </option>
       <method v="2" />
     </configuration>
-    <configuration name="Attach to Unity Editor" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="Unity Debug" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost" ignored-value-for-modified-check="47624">
+    <configuration name="Attach to Unity Editor" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="Unity Debug" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost" ignored-value-for-modified-check="32736">
       <option name="allowRunningInParallel" value="false" />
       <option name="listenPortForConnections" value="false" />
-      <option name="pid" value="47624" />
+      <option name="pid" value="32736" />
       <option name="projectPathOnTarget" />
       <option name="selectedOptions">
         <list />
@@ -112,7 +113,7 @@
       <option name="presentableId" value="Default" />
       <updated>1746224202112</updated>
       <workItem from="1746224202818" duration="3148000" />
-      <workItem from="1746822908001" duration="13663000" />
+      <workItem from="1746822908001" duration="23211000" />
     </task>
     <servers />
   </component>

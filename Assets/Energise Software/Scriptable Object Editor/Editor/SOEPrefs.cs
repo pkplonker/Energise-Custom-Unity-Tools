@@ -79,6 +79,97 @@ namespace ScriptableObjectEditor
 			string json = JsonUtility.ToJson(wrapper);
 			EditorPrefs.SetString(key, json);
 		}
+
+		public static void Save<T>(string tabChoiceKey, T tabChoice)
+		{
+			string prefsKey = $"SOEditor_{tabChoiceKey}";
+			Type t = typeof(T);
+
+			if (t == typeof(int))
+			{
+				EditorPrefs.SetInt(prefsKey, (int) (object) tabChoice);
+			}
+			else if (t == typeof(float))
+			{
+				EditorPrefs.SetFloat(prefsKey, (float) (object) tabChoice);
+			}
+			else if (t == typeof(bool))
+			{
+				EditorPrefs.SetBool(prefsKey, (bool) (object) tabChoice);
+			}
+			else if (t == typeof(string))
+			{
+				EditorPrefs.SetString(prefsKey, (string) (object) tabChoice);
+			}
+			else if (t.IsEnum)
+			{
+				EditorPrefs.SetString(prefsKey, tabChoice.ToString());
+			}
+			else
+			{
+				string json = JsonUtility.ToJson(tabChoice);
+				EditorPrefs.SetString(prefsKey, json);
+			}
+		}
+
+		public static T Load<T>(string tabChoiceKey, T defaultValue = default)
+		{
+			string prefsKey = $"SOEditor_{tabChoiceKey}";
+			Type t = typeof(T);
+
+			if (!EditorPrefs.HasKey(prefsKey))
+				return defaultValue;
+
+			if (t == typeof(int))
+			{
+				int stored = EditorPrefs.GetInt(prefsKey, (int) (object) defaultValue);
+				return (T) (object) stored;
+			}
+
+			if (t == typeof(float))
+			{
+				float stored = EditorPrefs.GetFloat(prefsKey, (float) (object) defaultValue);
+				return (T) (object) stored;
+			}
+
+			if (t == typeof(bool))
+			{
+				bool stored = EditorPrefs.GetBool(prefsKey, (bool) (object) defaultValue);
+				return (T) (object) stored;
+			}
+
+			if (t == typeof(string))
+			{
+				string stored = EditorPrefs.GetString(prefsKey, (string) (object) defaultValue);
+				return (T) (object) stored;
+			}
+
+			if (t.IsEnum)
+			{
+				string enumString = EditorPrefs.GetString(prefsKey, defaultValue?.ToString());
+				try
+				{
+					object parsed = Enum.Parse(t, enumString);
+					return (T) parsed;
+				}
+				catch
+				{
+					return defaultValue;
+				}
+			}
+
+			string json = EditorPrefs.GetString(prefsKey, null);
+			if (string.IsNullOrEmpty(json))
+				return defaultValue;
+			try
+			{
+				return JsonUtility.FromJson<T>(json);
+			}
+			catch
+			{
+				return defaultValue;
+			}
+		}
 	}
 
 	[Serializable]
