@@ -278,11 +278,18 @@ namespace ScriptableObjectEditor
 						RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[selectedTypeIndex]);
 					}
 
-					selectionParams.includeDerivedTypes =
-						EditorGUILayout.ToggleLeft(
-							new GUIContent("Include Derived", "Tick to include inherited/derived types in view"),
-							selectionParams.includeDerivedTypes,
-							GUILayout.Width(120));
+					EditorGUI.BeginChangeCheck();
+					bool inc = EditorGUILayout.ToggleLeft(
+						new GUIContent("Include Derived", "Tick to include inherited/derived types in view"),
+						selectionParams.includeDerivedTypes,
+						GUILayout.Width(120));
+					if (EditorGUI.EndChangeCheck() && inc != selectionParams.includeDerivedTypes)
+					{
+						selectionParams.includeDerivedTypes = inc;
+						TypeHandler.LoadScriptableObjectTypes(selectionParams);
+						RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[selectedTypeIndex]);
+					}
+
 					EditorGUILayout.LabelField(new GUIContent("Filter Types", "Text filtering of types to display"),
 						GUILayout.Width(80));
 
