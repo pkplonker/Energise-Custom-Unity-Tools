@@ -20,19 +20,21 @@ namespace ScriptableObjectEditor
 		private int draggingColumn = -1;
 		private float dragStartMouseX;
 		private float dragStartWidth;
-		private List<float> columnWidths = new();
 		private int sortColumnIndex = -1;
 		private bool sortAscending = true;
 		private Dictionary<string, bool> regions = new();
 		private int createCount;
+		private int reorderSourceColumn = -1;
+		private bool isReordering = false;
 
-		private List<Header> DefaultHeaders = new()
+		private List<Header> BuiltInHeaders = new()
 		{
 			new Header("Copy", 35),
 			new Header("Delete", 50),
 			new Header("Instance Name", 150),
 		};
 
+		private List<Column> columns = new();
 		private static SelectionParams selectionParams;
 
 		[MenuItem("Window/Energise Tools/Scriptable Object Editor &%S")]
@@ -47,31 +49,44 @@ namespace ScriptableObjectEditor
 		{
 			var window = GetWindow<ScriptableObjectEditorWindow>();
 			TypeHandler.Load(selectionParams);
-
+			window.InitializeColumns();
 			window.RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[window.selectedTypeIndex]);
 			window.Repaint();
 		}
 
 		private void OnEnable()
 		{
+			InitializeColumns();
 			var window = GetWindow<ScriptableObjectEditorWindow>();
-
 			selectionParams = new SelectionParams
-			{
-				selectedTypeIndex = window.selectedTypeIndex,
-				selectedAssemblyIndex = window.selectedAssemblyIndex
-			};
+				{selectedTypeIndex = window.selectedTypeIndex, selectedAssemblyIndex = window.selectedAssemblyIndex};
 			TypeHandler.Load(selectionParams);
 			RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes.FirstOrDefault());
 		}
 
+		private void InitializeColumns()
+		{
+			columns.Clear();
+			columns.Add(new Column(Column.Kind.BuiltIn, "Copy", 35, null,
+				(obj, toAdd, toRemove, opts) =>
+				{
+					if (GUILayout.Button(EditorGUIUtility.IconContent("d_Toolbar Plus"), opts)) toAdd.Add(obj);
+				}));
+			columns.Add(new Column(Column.Kind.BuiltIn, "Delete", 50, null,
+				(obj, toAdd, toRemove, opts) =>
+				{
+					if (GUILayout.Button(EditorGUIUtility.IconContent("d_TreeEditor.Trash"), opts)) toRemove.Add(obj);
+				}));
+			columns.Add(new Column(Column.Kind.BuiltIn, "Instance Name", 150, null,
+				(obj, toAdd, toRemove, opts) =>
+				{
+					EditorGUILayout.LabelField(obj.name, EditorStyles.textField, opts);
+				}));
+		}
+
 		private bool GetExpandedRegion(string key)
 		{
-			if (regions.ContainsKey(key))
-			{
-				return regions[key];
-			}
-
+			if (regions.ContainsKey(key)) return regions[key];
 			regions.Add(key, false);
 			return false;
 		}
@@ -79,7 +94,79 @@ namespace ScriptableObjectEditor
 		private void RefreshObjectsOfType(Type type)
 		{
 			TypeHandler.LoadObjectsOfType(type, selectionParams);
+
+			var propPaths = new List<string>();
+			if (TypeHandler.CurrentTypeObjects.Any())
+			{
+				var firstSO = new SerializedObject(TypeHandler.CurrentTypeObjects[0]);
+				propPaths = GetPropertyPaths(firstSO.GetIterator());
+			}
+
+			columns.Clear();
+			var orderList =
+				SOEPrefs.LoadInterleavedColumnOrderForCurrentType(selectedTypeIndex, TypeHandler.ScriptableObjectTypes);
+			if (orderList != null)
+			{
+				foreach (var entry in orderList)
+				{
+					if (entry.StartsWith("[H]"))
+					{
+						string label = entry.Substring(3);
+						var def = BuiltInHeaders.FirstOrDefault(h => h.Label == label);
+						if (def == null) continue;
+						var action = GetBuiltInDrawAction(def.Label);
+						columns.Add(new Column(Column.Kind.BuiltIn, def.Label, def.Width, null, action));
+					}
+					else
+					{
+						string path = entry.Substring(3);
+						float wi = Mathf.Max(100, path.Length * 10);
+						columns.Add(new Column(Column.Kind.Property, path, wi, path));
+					}
+				}
+			}
+			else
+			{
+				foreach (var h in BuiltInHeaders)
+				{
+					var action = GetBuiltInDrawAction(h.Label);
+					columns.Add(new Column(Column.Kind.BuiltIn, h.Label, h.Width, null, action));
+				}
+
+				foreach (var path in propPaths)
+					columns.Add(new Column(Column.Kind.Property, path, Mathf.Max(100, path.Length * 10), path));
+			}
+
+			var w = SOEPrefs.LoadColumnWidthsForCurrentType(selectedTypeIndex, TypeHandler.ScriptableObjectTypes);
+			if (w != null)
+				for (int i = 0; i < w.Count && i < columns.Count; i++)
+					columns[i].width = w[i];
+
 			ApplySorting();
+		}
+
+		private Action<ScriptableObject, List<ScriptableObject>, List<ScriptableObject>, GUILayoutOption[]>
+			GetBuiltInDrawAction(string label)
+		{
+			switch (label)
+			{
+				case "Copy":
+					return (obj, toAdd, toRemove, opts) =>
+					{
+						if (GUILayout.Button(EditorGUIUtility.IconContent("d_Toolbar Plus"), opts)) toAdd.Add(obj);
+					};
+				case "Delete":
+					return (obj, toAdd, toRemove, opts) =>
+					{
+						if (GUILayout.Button(EditorGUIUtility.IconContent("d_TreeEditor.Trash"), opts))
+							toRemove.Add(obj);
+					};
+				default:
+					return (obj, toAdd, toRemove, opts) =>
+					{
+						EditorGUILayout.LabelField(obj.name, EditorStyles.textField, opts);
+					};
+			}
 		}
 
 		private void OnGUI()
@@ -217,6 +304,26 @@ namespace ScriptableObjectEditor
 			EditorGUILayout.EndScrollView();
 		}
 
+		private void ReorderColumn(int src, int dst)
+		{
+			var col = columns[src];
+			columns.RemoveAt(src);
+			columns.Insert(dst, col);
+			SaveColumns();
+			Repaint();
+		}
+
+		private void SaveColumns()
+		{
+			SOEPrefs.SaveColumnWidthsForCurrentType(selectedTypeIndex, TypeHandler.ScriptableObjectTypes,
+				columns.Select(c => c.width).ToList());
+			SOEPrefs.SaveColumnOrderForCurrentType(
+				selectedTypeIndex,
+				TypeHandler.ScriptableObjectTypes,
+				columns
+			);
+		}
+
 		private bool Fold(string key, string optionalTooltip = "")
 		{
 			var val = EditorGUILayout.Foldout(GetExpandedRegion(key), new GUIContent(key, optionalTooltip));
@@ -285,6 +392,19 @@ namespace ScriptableObjectEditor
 			}
 		}
 
+		private int GetColumnIndexAtPosition(float mouseX)
+		{
+			float x = 0;
+			for (int i = 0; i < columns.Count; i++)
+			{
+				if (mouseX >= x && mouseX <= x + columns[i].width)
+					return i;
+				x += columns[i].width;
+			}
+
+			return -1;
+		}
+
 		private void DrawHeaderCell(string label, float width, int columnIndex)
 		{
 			var content = new GUIContent(label + (sortColumnIndex == columnIndex ? (sortAscending ? " ▲" : " ▼") : ""));
@@ -293,151 +413,127 @@ namespace ScriptableObjectEditor
 			Rect handleRect = new Rect(cellRect.xMax - 4, cellRect.y, 8, cellRect.height);
 			EditorGUIUtility.AddCursorRect(handleRect, MouseCursor.ResizeHorizontal);
 			var e = Event.current;
-			if (e.type == EventType.MouseDown)
+			switch (e.rawType)
 			{
-				if (handleRect.Contains(e.mousePosition))
-				{
-					draggingColumn = columnIndex;
-					dragStartMouseX = e.mousePosition.x;
-					dragStartWidth = columnWidths[columnIndex];
-					e.Use();
-				}
-				else if (cellRect.Contains(e.mousePosition))
-				{
-					if (sortColumnIndex == columnIndex) sortAscending = !sortAscending;
-					else
+				case EventType.MouseDown:
+					if (handleRect.Contains(e.mousePosition))
 					{
-						sortColumnIndex = columnIndex;
-						sortAscending = true;
+						draggingColumn = columnIndex;
+						dragStartMouseX = e.mousePosition.x;
+						dragStartWidth = columns[columnIndex].width;
+						isReordering = false;
+					}
+					else if (cellRect.Contains(e.mousePosition))
+					{
+						reorderSourceColumn = columnIndex;
+						isReordering = true;
 					}
 
-					RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[selectedTypeIndex]);
-					e.Use();
-				}
-			}
-			else if (e.type == EventType.MouseDrag && draggingColumn == columnIndex)
-			{
-				columnWidths[columnIndex] = Mathf.Max(20, dragStartWidth + (e.mousePosition.x - dragStartMouseX));
-				Repaint();
-				e.Use();
-			}
-			else if (e.type == EventType.MouseUp && draggingColumn == columnIndex)
-			{
-				draggingColumn = -1;
-				SOEPrefs.SaveColumnWidthsForCurrentType(selectedTypeIndex, TypeHandler.ScriptableObjectTypes,
-					columnWidths);
-				e.Use();
+					break;
+				case EventType.MouseDrag:
+					if (draggingColumn == columnIndex)
+					{
+						columns[columnIndex].width =
+							Mathf.Max(20, dragStartWidth + (e.mousePosition.x - dragStartMouseX));
+						Repaint();
+						e.Use();
+					}
+					else if (isReordering && reorderSourceColumn == columnIndex)
+					{
+						e.Use();
+					}
+
+					break;
+				case EventType.MouseUp:
+					if (draggingColumn == columnIndex)
+					{
+						draggingColumn = -1;
+						SaveColumns();
+						e.Use();
+					}
+					else if (isReordering && reorderSourceColumn >= 0)
+					{
+						int target = GetColumnIndexAtPosition(e.mousePosition.x);
+						if (target >= 0 && target != reorderSourceColumn) ReorderColumn(reorderSourceColumn, target);
+						isReordering = false;
+						reorderSourceColumn = -1;
+						e.Use();
+					}
+
+					break;
 			}
 		}
 
 		private void DrawPropertiesGrid()
 		{
-			if (!TypeHandler.CurrentTypeObjects.Any()) return;
-
-			var firstSO = new SerializedObject(TypeHandler.CurrentTypeObjects[0]);
-			var propertyPaths = GetPropertyPaths(firstSO.GetIterator());
-
-			int totalCols = DefaultHeaders.Count + propertyPaths.Count;
-			if (columnWidths.Count != totalCols)
-			{
-				columnWidths.Clear();
-				foreach (var header in DefaultHeaders)
-				{
-					columnWidths.Add(header.Width);
-				}
-
-				foreach (var path in propertyPaths)
-				{
-					columnWidths.Add(Mathf.Max(100, path.Length * 10));
-				}
-			}
-
+			int totalCols = columns.Count;
 			using (new SOERegion())
 			{
-				int index = 0;
-				foreach (var header in DefaultHeaders)
-				{
-					DrawHeaderCell(header.Label, columnWidths[index], index);
-					index++;
-				}
-
-				for (int i = 0; i < propertyPaths.Count; i++)
-				{
-					DrawHeaderCell(propertyPaths[i], columnWidths[i + DefaultHeaders.Count], i + DefaultHeaders.Count);
-				}
+				for (int i = 0; i < totalCols; i++)
+					DrawHeaderCell(columns[i].label, columns[i].width, i);
 			}
 
 			var toAdd = new List<ScriptableObject>();
 			var toRemove = new List<ScriptableObject>();
-
 			foreach (var obj in TypeHandler.CurrentTypeObjects)
 			{
 				var so = new SerializedObject(obj);
 				using (new SOERegion())
 				{
-					if (GUILayout.Button(EditorGUIUtility.IconContent("d_Toolbar Plus"),
-						    GUILayout.Width(columnWidths[0]),
-						    GUILayout.Height(18)))
+					for (int c = 0; c < columns.Count; c++)
 					{
-						toAdd.Add(obj);
-					}
-
-					if (GUILayout.Button(EditorGUIUtility.IconContent("d_TreeEditor.Trash"),
-						    GUILayout.Width(columnWidths[1]), GUILayout.Height(18)))
-					{
-						toRemove.Add(obj);
-					}
-
-					EditorGUILayout.LabelField(obj.name, EditorStyles.textField, GUILayout.Width(columnWidths[2]));
-
-					for (int i = 0; i < propertyPaths.Count; i++)
-					{
-						var path = propertyPaths[i];
-						var prop = so.FindProperty(path);
-						if (prop == null) continue;
-
-						FieldInfo field = obj.GetType()
-							.GetField(prop.name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-						var rangeAttr = field?.GetCustomAttribute<RangeAttribute>(true);
-						var minAttr = field?.GetCustomAttribute<MinAttribute>(true);
-						var textAreaAttr = field?.GetCustomAttribute<TextAreaAttribute>(true);
-						var colorUsageAttr = field?.GetCustomAttribute<ColorUsageAttribute>(true);
-
-						GUILayoutOption widthOpt = GUILayout.Width(columnWidths[i + 3]);
-
-						switch (prop.propertyType)
+						var col = columns[c];
+						if (col.kind == Column.Kind.BuiltIn)
 						{
-							case SerializedPropertyType.Float when rangeAttr != null:
-								prop.floatValue = EditorGUILayout.Slider(prop.floatValue, rangeAttr.min, rangeAttr.max,
-									widthOpt);
-								break;
-							case SerializedPropertyType.Integer when rangeAttr != null:
-								prop.intValue = EditorGUILayout.IntSlider(prop.intValue, (int) rangeAttr.min,
-									(int) rangeAttr.max, widthOpt);
-								break;
-							case SerializedPropertyType.Float when minAttr != null:
-								prop.floatValue = Mathf.Max(minAttr.min,
-									EditorGUILayout.FloatField(prop.floatValue, widthOpt));
-								break;
-							case SerializedPropertyType.Integer when minAttr != null:
-								prop.intValue = Mathf.Max((int) minAttr.min,
-									EditorGUILayout.IntField(prop.intValue, widthOpt));
-								break;
-							case SerializedPropertyType.String when textAreaAttr != null:
-								string str = prop.stringValue;
-								str = EditorGUILayout.TextArea(str, GUILayout.Height(textAreaAttr.minLines * 14),
-									GUILayout.Width(columnWidths[i + 3]));
-								prop.stringValue = str;
-								break;
-							case SerializedPropertyType.Color:
-								bool showAlpha = colorUsageAttr?.showAlpha ?? true;
-								bool hdr = colorUsageAttr?.hdr ?? false;
-								prop.colorValue = EditorGUILayout.ColorField(GUIContent.none, prop.colorValue, true,
-									showAlpha, hdr, widthOpt);
-								break;
-							default:
-								EditorGUILayout.PropertyField(prop, GUIContent.none, widthOpt);
-								break;
+							col.drawAction(obj, toAdd, toRemove,
+								new[] {GUILayout.Width(col.width), GUILayout.Height(18)});
+						}
+						else
+						{
+							var prop = so.FindProperty(col.propertyPath);
+							if (prop == null)
+							{
+								GUILayout.Label(GUIContent.none, GUILayout.Width(col.width));
+								continue;
+							}
+
+							var field = obj.GetType().GetField(prop.name,
+								BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+							var rangeAttr = field?.GetCustomAttribute<RangeAttribute>(true);
+							var minAttr = field?.GetCustomAttribute<MinAttribute>(true);
+							var textAreaAttr = field?.GetCustomAttribute<TextAreaAttribute>(true);
+							var colorUsageAttr = field?.GetCustomAttribute<ColorUsageAttribute>(true);
+							var opts = new[] {GUILayout.Width(col.width)};
+							switch (prop.propertyType)
+							{
+								case SerializedPropertyType.Float when rangeAttr != null:
+									prop.floatValue = EditorGUILayout.Slider(prop.floatValue, rangeAttr.min,
+										rangeAttr.max, opts);
+									break;
+								case SerializedPropertyType.Integer when rangeAttr != null:
+									prop.intValue = EditorGUILayout.IntSlider(prop.intValue, (int) rangeAttr.min,
+										(int) rangeAttr.max, opts);
+									break;
+								case SerializedPropertyType.Float when minAttr != null:
+									prop.floatValue = Mathf.Max(minAttr.min,
+										EditorGUILayout.FloatField(prop.floatValue, opts));
+									break;
+								case SerializedPropertyType.Integer when minAttr != null:
+									prop.intValue = Mathf.Max((int) minAttr.min,
+										EditorGUILayout.IntField(prop.intValue, opts));
+									break;
+								case SerializedPropertyType.String when textAreaAttr != null:
+									string s = EditorGUILayout.TextArea(prop.stringValue, opts);
+									prop.stringValue = s;
+									break;
+								case SerializedPropertyType.Color:
+									prop.colorValue = EditorGUILayout.ColorField(GUIContent.none, prop.colorValue, true,
+										colorUsageAttr?.showAlpha ?? true, colorUsageAttr?.hdr ?? false, opts);
+									break;
+								default:
+									EditorGUILayout.PropertyField(prop, GUIContent.none, opts);
+									break;
+							}
 						}
 					}
 				}
@@ -451,16 +547,19 @@ namespace ScriptableObjectEditor
 
 		private static List<string> GetPropertyPaths(SerializedProperty iter)
 		{
-			var propertyPaths = new List<string>();
+			var paths = new List<string>();
 			if (iter.NextVisible(true))
-			{
 				do
 				{
-					propertyPaths.Add(iter.propertyPath);
+					paths.Add(iter.propertyPath);
 				} while (iter.NextVisible(false));
-			}
 
-			return propertyPaths;
+			return paths;
+		}
+
+		private List<string> GetPropertyPathList()
+		{
+			return columns.Where(c => c.kind == Column.Kind.Property).Select(c => c.propertyPath).ToList();
 		}
 	}
 }

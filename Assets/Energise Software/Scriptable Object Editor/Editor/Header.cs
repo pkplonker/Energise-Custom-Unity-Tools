@@ -2,7 +2,7 @@ namespace ScriptableObjectEditor
 {
 	internal class Header
 	{
-		internal Header(string label, int width)
+		internal Header(string label, float width)
 		{
 			Label = label;
 			Width = width;
@@ -10,6 +10,6 @@ namespace ScriptableObjectEditor
 
 		internal string Label { get; set; }
 
-		internal int Width { get; set; }
+		internal float Width { get; set; }
 	}
 }
