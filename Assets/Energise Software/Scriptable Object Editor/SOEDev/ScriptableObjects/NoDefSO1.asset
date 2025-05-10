@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1d2848e06e440414a8c699c860e8ae02, type: 3}
-  m_Name: NoDefSO_Copy1_Copy1
+  m_Name: NoDefSO1
   m_EditorClassIdentifier: 
   TestString: 
   TestShader: {fileID: 0}
   TestMaterial: {fileID: 0}
   TestCamera: {fileID: 0}
-  TestColor: {r: 0.9528302, g: 0.6598071, b: 0, a: 0}
+  TestColor: {r: 1, g: 0, b: 0, a: 0}

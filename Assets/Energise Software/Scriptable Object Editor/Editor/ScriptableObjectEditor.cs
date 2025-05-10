@@ -80,8 +80,17 @@ namespace ScriptableObjectEditor
 			columns.Add(new Column(Column.Kind.BuiltIn, "Instance Name", 150, null,
 				(obj, toAdd, toRemove, opts) =>
 				{
-					EditorGUILayout.LabelField(obj.name, EditorStyles.textField, opts);
-				}));
+					string path = AssetDatabase.GetAssetPath(obj);
+					string oldName = obj.name;
+					string newName = EditorGUILayout.TextField(oldName, opts);
+					if (newName != oldName)
+					{
+						AssetDatabase.RenameAsset(path, newName);
+						AssetDatabase.SaveAssets();
+						obj.name = newName;
+					}
+				}
+			));
 		}
 
 		private bool GetExpandedRegion(string key)
@@ -114,7 +123,28 @@ namespace ScriptableObjectEditor
 						string label = entry.Substring(3);
 						var def = BuiltInHeaders.FirstOrDefault(h => h.Label == label);
 						if (def == null) continue;
-						var action = GetBuiltInDrawAction(def.Label);
+						Action<ScriptableObject, List<ScriptableObject>, List<ScriptableObject>, GUILayoutOption[]>
+							action;
+						if (label == "Instance Name")
+						{
+							action = (obj, toAdd, toRemove, opts) =>
+							{
+								string path = AssetDatabase.GetAssetPath(obj);
+								string oldName = obj.name;
+								string newName = EditorGUILayout.TextField(oldName, opts);
+								if (newName != oldName)
+								{
+									AssetDatabase.RenameAsset(path, newName);
+									AssetDatabase.SaveAssets();
+									obj.name = newName;
+								}
+							};
+						}
+						else
+						{
+							action = GetBuiltInDrawAction(def.Label);
+						}
+
 						columns.Add(new Column(Column.Kind.BuiltIn, def.Label, def.Width, null, action));
 					}
 					else
@@ -482,12 +512,14 @@ namespace ScriptableObjectEditor
 
 			var toAdd = new List<ScriptableObject>();
 			var toRemove = new List<ScriptableObject>();
-			foreach (var obj in TypeHandler.CurrentTypeObjects)
+			var objs = TypeHandler.CurrentTypeObjects.ToList();
+			foreach (var obj in objs)
 			{
 				var so = new SerializedObject(obj);
 				using (new SOERegion())
 				{
-					foreach (var col in columns)
+					var drawCols = columns.ToList();
+					foreach (var col in drawCols)
 					{
 						if (col.kind == Column.Kind.BuiltIn)
 						{
