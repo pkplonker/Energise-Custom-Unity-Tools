@@ -14,24 +14,23 @@ namespace ScriptableObjectEditor
 		private Vector2 scrollPosition;
 		private List<Type> scriptableObjectTypes;
 		private string[] typeNames;
+
 		[SerializeField]
 		private int selectedTypeIndex;
+
 		[SerializeField]
 		private int selectedAssemblyIndex;
 
 		private List<ScriptableObject> currentTypeObjects = new();
-		private static string assetsFolderPath = "Assets";
 
 		private List<Assembly> availableAssemblies;
 		private string[] assemblyNames;
-		
-		private bool includeDerivedTypes = true;
+
 		private int draggingColumn = -1;
 		private float dragStartMouseX;
 		private float dragStartWidth;
 		private List<float> columnWidths = new();
 		private string typeSearchString = string.Empty;
-		private string instanceSearchString = string.Empty;
 		private int sortColumnIndex = -1;
 		private bool sortAscending = true;
 		private Dictionary<ScriptableObject, long> memoryUsage = new();
@@ -39,12 +38,14 @@ namespace ScriptableObjectEditor
 		private long totalMemoryFiltered;
 		private Dictionary<string, bool> regions = new();
 		private int createCount;
+		private static readonly FilterParams filterParams;
 
 		[MenuItem("Window/Energise Tools/Scriptable Object Editor &%S")]
 		public static void ShowWindow() => GetWindow<ScriptableObjectEditorWindow>("Scriptable Object Editor");
 
 		static ScriptableObjectEditorWindow()
 		{
+			filterParams = new FilterParams();
 			AssemblyReloadEvents.afterAssemblyReload += OnAfterAssemblyReload;
 		}
 
@@ -120,49 +121,12 @@ namespace ScriptableObjectEditor
 			selectedTypeIndex = Mathf.Clamp(selectedTypeIndex, 0, typeNames.Length - 1);
 		}
 
-		private static bool IsInAssetsFolder(Type type)
-		{
-			var guids = AssetDatabase.FindAssets($"t:{type.Name}", new[] {assetsFolderPath});
-			return guids.Any();
-		}
+		private static bool IsInAssetsFolder(Type type) =>
+			AssetDatabase.FindAssets($"t:{type.Name}", new[] {filterParams.assetsFolderPath}).Any();
 
 		private void LoadObjectsOfType(Type type)
 		{
-			currentTypeObjects.Clear();
-			memoryUsage.Clear();
-			totalMemoryAll = 0;
-			totalMemoryFiltered = 0;
-			if (type == null) return;
-
-			var all = new List<ScriptableObject>();
-			var guids = AssetDatabase.FindAssets("t:ScriptableObject", new[] {assetsFolderPath});
-			foreach (var guid in guids)
-			{
-				var path = AssetDatabase.GUIDToAssetPath(guid);
-				var obj = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
-				if (obj == null) continue;
-				if ((includeDerivedTypes && type.IsAssignableFrom(obj.GetType())) ||
-				    (!includeDerivedTypes && obj.GetType() == type))
-				{
-					all.Add(obj);
-				}
-			}
-
-			foreach (var obj in all)
-			{
-				long mem = Profiler.GetRuntimeMemorySizeLong(obj);
-				memoryUsage[obj] = mem;
-				totalMemoryAll += mem;
-			}
-
-			currentTypeObjects = string.IsNullOrEmpty(instanceSearchString)
-				? all
-				: all.Where(o => o.name.IndexOf(instanceSearchString, StringComparison.OrdinalIgnoreCase) >= 0)
-					.ToList();
-
-			foreach (var obj in currentTypeObjects)
-				totalMemoryFiltered += memoryUsage[obj];
-
+			currentTypeObjects = TypeHandler.LoadObjectsOfType(type, filterParams);
 			ApplySorting();
 		}
 
@@ -178,13 +142,15 @@ namespace ScriptableObjectEditor
 				EditorGUILayout.BeginHorizontal();
 
 				EditorGUILayout.LabelField("Path", GUILayout.Width(40));
-				assetsFolderPath = EditorGUILayout.TextField(assetsFolderPath, GUILayout.Width(200));
+				filterParams.assetsFolderPath =
+					EditorGUILayout.TextField(filterParams.assetsFolderPath, GUILayout.Width(200));
 				if (GUILayout.Button("Browse", GUILayout.Width(80)))
 				{
-					string sel = EditorUtility.OpenFolderPanel("Select Scriptable Object Folder", assetsFolderPath, "");
+					string sel = EditorUtility.OpenFolderPanel("Select Scriptable Object Folder",
+						filterParams.assetsFolderPath, "");
 					if (!string.IsNullOrEmpty(sel))
 					{
-						assetsFolderPath = sel.Replace(Application.dataPath, "Assets");
+						filterParams.assetsFolderPath = sel.Replace(Application.dataPath, "Assets");
 						LoadScriptableObjectTypes();
 						LoadObjectsOfType(scriptableObjectTypes.FirstOrDefault());
 					}
@@ -232,9 +198,9 @@ namespace ScriptableObjectEditor
 				LoadObjectsOfType(scriptableObjectTypes[selectedTypeIndex]);
 			}
 
-			includeDerivedTypes =
-				EditorGUILayout.ToggleLeft("Include Derived", includeDerivedTypes, GUILayout.Width(120));
-			EditorGUILayout.LabelField("Search Types", GUILayout.Width(80));
+			filterParams.includeDerivedTypes =
+				EditorGUILayout.ToggleLeft("Include Derived", filterParams.includeDerivedTypes, GUILayout.Width(120));
+			EditorGUILayout.LabelField("Filter Types", GUILayout.Width(80));
 
 			var newTypeSearch = EditorGUILayout.TextField(typeSearchString, GUILayout.Width(200));
 			if (newTypeSearch != typeSearchString)
@@ -243,26 +209,28 @@ namespace ScriptableObjectEditor
 				LoadScriptableObjectTypes();
 				LoadObjectsOfType(scriptableObjectTypes.FirstOrDefault());
 			}
-
-			EditorGUILayout.LabelField("Search Instances", GUILayout.Width(100));
-			var newInstSearch = EditorGUILayout.TextField(instanceSearchString, GUILayout.Width(200));
-			if (newInstSearch != instanceSearchString)
+			EditorGUILayout.EndHorizontal();
+			
+			EditorGUILayout.BeginHorizontal();
+			EditorGUILayout.LabelField("Filter Instances", GUILayout.Width(100));
+			var newInstSearch = EditorGUILayout.TextField(filterParams.instanceSearchString, GUILayout.Width(200));
+			if (newInstSearch != filterParams.instanceSearchString)
 			{
-				instanceSearchString = newInstSearch;
+				filterParams.instanceSearchString = newInstSearch;
 				LoadObjectsOfType(scriptableObjectTypes[selectedTypeIndex]);
 			}
-
 			EditorGUILayout.EndHorizontal();
+
 			EditorGUILayout.BeginHorizontal();
 
-			EditorGUILayout.LabelField("Amount", GUILayout.Width(50));
-			createCount = EditorGUILayout.IntField(createCount, GUILayout.Width(40));
-			createCount = Mathf.Max(1, createCount);
 			if (GUILayout.Button(EditorGUIUtility.IconContent("d_Toolbar Plus"), GUILayout.Width(30),
 				    GUILayout.Height(18)))
 			{
 				CreateNewInstance(createCount);
 			}
+
+			createCount = EditorGUILayout.IntField(createCount, GUILayout.Width(40));
+			createCount = Mathf.Max(1, createCount);
 
 			EditorGUILayout.EndHorizontal();
 
@@ -456,7 +424,7 @@ namespace ScriptableObjectEditor
 			if (selectedTypeIndex < 0 || selectedTypeIndex >= scriptableObjectTypes.Count) return;
 			Type type = scriptableObjectTypes[selectedTypeIndex];
 
-			string defaultFolder = assetsFolderPath;
+			string defaultFolder = filterParams.assetsFolderPath;
 			if (currentTypeObjects.Count > 0)
 			{
 				string firstPath = AssetDatabase.GetAssetPath(currentTypeObjects[0]);
@@ -487,115 +455,126 @@ namespace ScriptableObjectEditor
 			LoadObjectsOfType(type);
 		}
 
-		   private void DrawPropertiesGrid()
-        {
-            if (!currentTypeObjects.Any()) return;
+		private void DrawPropertiesGrid()
+		{
+			if (!currentTypeObjects.Any()) return;
 
-            var firstSO = new SerializedObject(currentTypeObjects[0]);
-            var iter = firstSO.GetIterator();
-            var propertyPaths = new List<string>();
-            if (iter.NextVisible(true))
-                do { propertyPaths.Add(iter.propertyPath); } while (iter.NextVisible(false));
+			var firstSO = new SerializedObject(currentTypeObjects[0]);
+			var iter = firstSO.GetIterator();
+			var propertyPaths = new List<string>();
+			if (iter.NextVisible(true))
+				do
+				{
+					propertyPaths.Add(iter.propertyPath);
+				} while (iter.NextVisible(false));
 
-            int totalCols = 3 + propertyPaths.Count;
-            if (columnWidths.Count != totalCols)
-            {
-                columnWidths.Clear();
-                columnWidths.Add(35);
-                columnWidths.Add(35);
-                columnWidths.Add(150);
-                foreach (var path in propertyPaths)
-                    columnWidths.Add(Mathf.Max(100, path.Length * 10));
-            }
+			int totalCols = 3 + propertyPaths.Count;
+			if (columnWidths.Count != totalCols)
+			{
+				columnWidths.Clear();
+				columnWidths.Add(35);
+				columnWidths.Add(35);
+				columnWidths.Add(150);
+				foreach (var path in propertyPaths)
+					columnWidths.Add(Mathf.Max(100, path.Length * 10));
+			}
 
-            EditorGUILayout.BeginHorizontal("box");
-            DrawHeaderCell("Actions", columnWidths[0], 0);
-            DrawHeaderCell("Delete", columnWidths[1], 1);
-            DrawHeaderCell("Instance Name", columnWidths[2], 2);
-            for (int i = 0; i < propertyPaths.Count; i++)
-                DrawHeaderCell(propertyPaths[i], columnWidths[i + 3], i + 3);
-            EditorGUILayout.EndHorizontal();
+			EditorGUILayout.BeginHorizontal("box");
+			DrawHeaderCell("Actions", columnWidths[0], 0);
+			DrawHeaderCell("Delete", columnWidths[1], 1);
+			DrawHeaderCell("Instance Name", columnWidths[2], 2);
+			for (int i = 0; i < propertyPaths.Count; i++)
+				DrawHeaderCell(propertyPaths[i], columnWidths[i + 3], i + 3);
+			EditorGUILayout.EndHorizontal();
 
-            var toAdd = new List<ScriptableObject>();
-            var toRemove = new List<ScriptableObject>();
+			var toAdd = new List<ScriptableObject>();
+			var toRemove = new List<ScriptableObject>();
 
-            foreach (var obj in currentTypeObjects)
-            {
-                var so = new SerializedObject(obj);
-                EditorGUILayout.BeginHorizontal();
-                if (GUILayout.Button(EditorGUIUtility.IconContent("d_Toolbar Plus"), GUILayout.Width(columnWidths[0]), GUILayout.Height(18)))
-                    toAdd.Add(obj);
-                if (GUILayout.Button(EditorGUIUtility.IconContent("d_TreeEditor.Trash"), GUILayout.Width(columnWidths[1]), GUILayout.Height(18)))
-                    toRemove.Add(obj);
-                EditorGUILayout.LabelField(obj.name, EditorStyles.textField, GUILayout.Width(columnWidths[2]));
+			foreach (var obj in currentTypeObjects)
+			{
+				var so = new SerializedObject(obj);
+				EditorGUILayout.BeginHorizontal();
+				if (GUILayout.Button(EditorGUIUtility.IconContent("d_Toolbar Plus"), GUILayout.Width(columnWidths[0]),
+					    GUILayout.Height(18)))
+					toAdd.Add(obj);
+				if (GUILayout.Button(EditorGUIUtility.IconContent("d_TreeEditor.Trash"),
+					    GUILayout.Width(columnWidths[1]), GUILayout.Height(18)))
+					toRemove.Add(obj);
+				EditorGUILayout.LabelField(obj.name, EditorStyles.textField, GUILayout.Width(columnWidths[2]));
 
-                for (int i = 0; i < propertyPaths.Count; i++)
-                {
-                    var path = propertyPaths[i];
-                    var prop = so.FindProperty(path);
-                    if (prop == null) continue;
+				for (int i = 0; i < propertyPaths.Count; i++)
+				{
+					var path = propertyPaths[i];
+					var prop = so.FindProperty(path);
+					if (prop == null) continue;
 
-                    FieldInfo field = obj.GetType()
-                        .GetField(prop.name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                    var rangeAttr = field?.GetCustomAttribute<RangeAttribute>(true);
-                    var minAttr = field?.GetCustomAttribute<MinAttribute>(true);
-                    var textAreaAttr = field?.GetCustomAttribute<TextAreaAttribute>(true);
-                    var colorUsageAttr = field?.GetCustomAttribute<ColorUsageAttribute>(true);
+					FieldInfo field = obj.GetType()
+						.GetField(prop.name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+					var rangeAttr = field?.GetCustomAttribute<RangeAttribute>(true);
+					var minAttr = field?.GetCustomAttribute<MinAttribute>(true);
+					var textAreaAttr = field?.GetCustomAttribute<TextAreaAttribute>(true);
+					var colorUsageAttr = field?.GetCustomAttribute<ColorUsageAttribute>(true);
 
-                    GUILayoutOption widthOpt = GUILayout.Width(columnWidths[i + 3]);
+					GUILayoutOption widthOpt = GUILayout.Width(columnWidths[i + 3]);
 
-                    switch (prop.propertyType)
-                    {
-                        case SerializedPropertyType.Float when rangeAttr != null:
-                            prop.floatValue = EditorGUILayout.Slider(prop.floatValue, rangeAttr.min, rangeAttr.max, widthOpt);
-                            break;
-                        case SerializedPropertyType.Integer when rangeAttr != null:
-                            prop.intValue = EditorGUILayout.IntSlider(prop.intValue, (int)rangeAttr.min, (int)rangeAttr.max, widthOpt);
-                            break;
-                        case SerializedPropertyType.Float when minAttr != null:
-                            prop.floatValue = Mathf.Max(minAttr.min, EditorGUILayout.FloatField(prop.floatValue, widthOpt));
-                            break;
-                        case SerializedPropertyType.Integer when minAttr != null:
-                            prop.intValue = Mathf.Max((int)minAttr.min, EditorGUILayout.IntField(prop.intValue, widthOpt));
-                            break;
-                        case SerializedPropertyType.String when textAreaAttr != null:
-                            string str = prop.stringValue;
-                            str = EditorGUILayout.TextArea(str, GUILayout.Height(textAreaAttr.minLines * 14), GUILayout.Width(columnWidths[i + 3]));
-                            prop.stringValue = str;
-                            break;
-                        case SerializedPropertyType.Color:
-                            bool showAlpha = colorUsageAttr?.showAlpha ?? true;
-                            bool hdr = colorUsageAttr?.hdr ?? false;
-                            prop.colorValue = EditorGUILayout.ColorField(GUIContent.none, prop.colorValue, true, showAlpha, hdr, widthOpt);
-                            break;
-                        default:
-                            EditorGUILayout.PropertyField(prop, GUIContent.none, widthOpt);
-                            break;
-                    }
-                }
+					switch (prop.propertyType)
+					{
+						case SerializedPropertyType.Float when rangeAttr != null:
+							prop.floatValue = EditorGUILayout.Slider(prop.floatValue, rangeAttr.min, rangeAttr.max,
+								widthOpt);
+							break;
+						case SerializedPropertyType.Integer when rangeAttr != null:
+							prop.intValue = EditorGUILayout.IntSlider(prop.intValue, (int) rangeAttr.min,
+								(int) rangeAttr.max, widthOpt);
+							break;
+						case SerializedPropertyType.Float when minAttr != null:
+							prop.floatValue = Mathf.Max(minAttr.min,
+								EditorGUILayout.FloatField(prop.floatValue, widthOpt));
+							break;
+						case SerializedPropertyType.Integer when minAttr != null:
+							prop.intValue = Mathf.Max((int) minAttr.min,
+								EditorGUILayout.IntField(prop.intValue, widthOpt));
+							break;
+						case SerializedPropertyType.String when textAreaAttr != null:
+							string str = prop.stringValue;
+							str = EditorGUILayout.TextArea(str, GUILayout.Height(textAreaAttr.minLines * 14),
+								GUILayout.Width(columnWidths[i + 3]));
+							prop.stringValue = str;
+							break;
+						case SerializedPropertyType.Color:
+							bool showAlpha = colorUsageAttr?.showAlpha ?? true;
+							bool hdr = colorUsageAttr?.hdr ?? false;
+							prop.colorValue = EditorGUILayout.ColorField(GUIContent.none, prop.colorValue, true,
+								showAlpha, hdr, widthOpt);
+							break;
+						default:
+							EditorGUILayout.PropertyField(prop, GUIContent.none, widthOpt);
+							break;
+					}
+				}
 
-                EditorGUILayout.EndHorizontal();
-                so.ApplyModifiedProperties();
-            }
+				EditorGUILayout.EndHorizontal();
+				so.ApplyModifiedProperties();
+			}
 
-            foreach (var add in toAdd)
-            {
-                var assetPath = AssetDatabase.GetAssetPath(add);
-                if (TryGetUniqueAssetPath(assetPath, out var newAssetPath))
-                {
-                    var newObj = Instantiate(add);
-                    AssetDatabase.CreateAsset(newObj, newAssetPath);
-                    AssetDatabase.SaveAssets();
-                }
-            }
+			foreach (var add in toAdd)
+			{
+				var assetPath = AssetDatabase.GetAssetPath(add);
+				if (TryGetUniqueAssetPath(assetPath, out var newAssetPath))
+				{
+					var newObj = Instantiate(add);
+					AssetDatabase.CreateAsset(newObj, newAssetPath);
+					AssetDatabase.SaveAssets();
+				}
+			}
 
-            foreach (var obj in toRemove)
-            {
-                var assetPath = AssetDatabase.GetAssetPath(obj);
-                AssetDatabase.DeleteAsset(assetPath);
-                AssetDatabase.SaveAssets();
-            }
-        }
+			foreach (var obj in toRemove)
+			{
+				var assetPath = AssetDatabase.GetAssetPath(obj);
+				AssetDatabase.DeleteAsset(assetPath);
+				AssetDatabase.SaveAssets();
+			}
+		}
 
 		private bool TryGetUniqueAssetPath(string originalPath, out string uniquePath)
 		{
