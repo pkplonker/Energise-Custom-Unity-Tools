@@ -333,61 +333,43 @@ namespace ScriptableObjectEditor
 
 		private void ApplySorting()
 		{
-			if (sortColumnIndex < 0) return;
-			if (sortColumnIndex == 1)
+			if (sortColumnIndex < 0 || sortColumnIndex >= columns.Count) return;
+			var col = columns[sortColumnIndex];
+			if (col.kind == Column.Kind.BuiltIn)
 			{
-				TypeHandler.CurrentTypeObjects = (sortAscending
-					? TypeHandler.CurrentTypeObjects.OrderBy(o => o.name)
-					: TypeHandler.CurrentTypeObjects.OrderByDescending(o => o.name)).ToList();
-			}
-			else if (sortColumnIndex >= 2)
-			{
-				var first = new SerializedObject(TypeHandler.CurrentTypeObjects[0]);
-				var iter = first.GetIterator();
-				var paths = new List<string>();
-				if (iter.NextVisible(true))
-					do
-					{
-						paths.Add(iter.propertyPath);
-					} while (iter.NextVisible(false));
-
-				if (sortColumnIndex == 2)
+				if (col.label == "Instance Name")
 				{
-					TypeHandler.CurrentTypeObjects = (sortAscending
-						? TypeHandler.CurrentTypeObjects.OrderBy(o => o.name)
-						: TypeHandler.CurrentTypeObjects.OrderByDescending(o => o.name)).ToList();
+					TypeHandler.CurrentTypeObjects = sortAscending
+						? TypeHandler.CurrentTypeObjects.OrderBy(o => o.name).ToList()
+						: TypeHandler.CurrentTypeObjects.OrderByDescending(o => o.name).ToList();
 				}
-				else if (sortColumnIndex >= 3)
+			}
+			else if (col.kind == Column.Kind.Property)
+			{
+				string path = col.propertyPath;
+				var first = new SerializedObject(TypeHandler.CurrentTypeObjects[0]);
+				var prop = first.FindProperty(path);
+				bool isColor = prop != null && prop.propertyType == SerializedPropertyType.Color;
+				if (isColor)
 				{
-					int propIndex = sortColumnIndex - 3;
-					if (propIndex < paths.Count)
-					{
-						string path = paths[propIndex];
-						var so = new SerializedObject(TypeHandler.CurrentTypeObjects[0]);
-						var prop = so.FindProperty(path);
-						if (prop.propertyType == SerializedPropertyType.Color)
+					TypeHandler.CurrentTypeObjects = sortAscending
+						? TypeHandler.CurrentTypeObjects.OrderBy(o =>
 						{
-							TypeHandler.CurrentTypeObjects = (sortAscending
-								? TypeHandler.CurrentTypeObjects.OrderBy(o =>
-								{
-									var c = new SerializedObject(o).FindProperty(path).colorValue;
-									return c.r + c.g + c.b + c.a;
-								})
-								: TypeHandler.CurrentTypeObjects.OrderByDescending(o =>
-								{
-									var c = new SerializedObject(o).FindProperty(path).colorValue;
-									return c.r + c.g + c.b + c.a;
-								})).ToList();
-						}
-						else
+							var c = new SerializedObject(o).FindProperty(path).colorValue;
+							return c.r + c.g + c.b + c.a;
+						}).ToList()
+						: TypeHandler.CurrentTypeObjects.OrderByDescending(o =>
 						{
-							TypeHandler.CurrentTypeObjects = (sortAscending
-									? TypeHandler.CurrentTypeObjects.OrderBy(o => TypeHandler.GetPropertyValue(o, path))
-									: TypeHandler.CurrentTypeObjects.OrderByDescending(o =>
-										TypeHandler.GetPropertyValue(o, path)))
-								.ToList();
-						}
-					}
+							var c = new SerializedObject(o).FindProperty(path).colorValue;
+							return c.r + c.g + c.b + c.a;
+						}).ToList();
+				}
+				else
+				{
+					TypeHandler.CurrentTypeObjects = sortAscending
+						? TypeHandler.CurrentTypeObjects.OrderBy(o => TypeHandler.GetPropertyValue(o, path)).ToList()
+						: TypeHandler.CurrentTypeObjects.OrderByDescending(o => TypeHandler.GetPropertyValue(o, path))
+							.ToList();
 				}
 			}
 		}
@@ -425,6 +407,16 @@ namespace ScriptableObjectEditor
 					}
 					else if (cellRect.Contains(e.mousePosition))
 					{
+						if (sortColumnIndex == columnIndex)
+							sortAscending = !sortAscending;
+						else
+						{
+							sortColumnIndex = columnIndex;
+							sortAscending = true;
+						}
+
+						ApplySorting();
+						e.Use();
 						reorderSourceColumn = columnIndex;
 						isReordering = true;
 					}
@@ -454,7 +446,8 @@ namespace ScriptableObjectEditor
 					else if (isReordering && reorderSourceColumn >= 0)
 					{
 						int target = GetColumnIndexAtPosition(e.mousePosition.x);
-						if (target >= 0 && target != reorderSourceColumn) ReorderColumn(reorderSourceColumn, target);
+						if (target >= 0 && target != reorderSourceColumn)
+							ReorderColumn(reorderSourceColumn, target);
 						isReordering = false;
 						reorderSourceColumn = -1;
 						e.Use();
@@ -467,10 +460,24 @@ namespace ScriptableObjectEditor
 		private void DrawPropertiesGrid()
 		{
 			int totalCols = columns.Count;
+			int dropIndex = -1;
+			var e = Event.current;
+			if (isReordering && e.rawType == EventType.Repaint)
+			{
+				dropIndex = GetColumnIndexAtPosition(e.mousePosition.x);
+			}
+
 			using (new SOERegion())
 			{
 				for (int i = 0; i < totalCols; i++)
+				{
 					DrawHeaderCell(columns[i].label, columns[i].width, i);
+					if (i == dropIndex)
+					{
+						Rect rect = GUILayoutUtility.GetLastRect();
+						EditorGUI.DrawRect(rect, new Color(0f, 0.5f, 1f, 0.3f));
+					}
+				}
 			}
 
 			var toAdd = new List<ScriptableObject>();
@@ -480,13 +487,12 @@ namespace ScriptableObjectEditor
 				var so = new SerializedObject(obj);
 				using (new SOERegion())
 				{
-					for (int c = 0; c < columns.Count; c++)
+					foreach (var col in columns)
 					{
-						var col = columns[c];
 						if (col.kind == Column.Kind.BuiltIn)
 						{
 							col.drawAction(obj, toAdd, toRemove,
-								new[] {GUILayout.Width(col.width), GUILayout.Height(18)});
+								new GUILayoutOption[] {GUILayout.Width(col.width), GUILayout.Height(18)});
 						}
 						else
 						{
@@ -494,45 +500,47 @@ namespace ScriptableObjectEditor
 							if (prop == null)
 							{
 								GUILayout.Label(GUIContent.none, GUILayout.Width(col.width));
-								continue;
 							}
-
-							var field = obj.GetType().GetField(prop.name,
-								BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-							var rangeAttr = field?.GetCustomAttribute<RangeAttribute>(true);
-							var minAttr = field?.GetCustomAttribute<MinAttribute>(true);
-							var textAreaAttr = field?.GetCustomAttribute<TextAreaAttribute>(true);
-							var colorUsageAttr = field?.GetCustomAttribute<ColorUsageAttribute>(true);
-							var opts = new[] {GUILayout.Width(col.width)};
-							switch (prop.propertyType)
+							else
 							{
-								case SerializedPropertyType.Float when rangeAttr != null:
-									prop.floatValue = EditorGUILayout.Slider(prop.floatValue, rangeAttr.min,
-										rangeAttr.max, opts);
-									break;
-								case SerializedPropertyType.Integer when rangeAttr != null:
-									prop.intValue = EditorGUILayout.IntSlider(prop.intValue, (int) rangeAttr.min,
-										(int) rangeAttr.max, opts);
-									break;
-								case SerializedPropertyType.Float when minAttr != null:
-									prop.floatValue = Mathf.Max(minAttr.min,
-										EditorGUILayout.FloatField(prop.floatValue, opts));
-									break;
-								case SerializedPropertyType.Integer when minAttr != null:
-									prop.intValue = Mathf.Max((int) minAttr.min,
-										EditorGUILayout.IntField(prop.intValue, opts));
-									break;
-								case SerializedPropertyType.String when textAreaAttr != null:
-									string s = EditorGUILayout.TextArea(prop.stringValue, opts);
-									prop.stringValue = s;
-									break;
-								case SerializedPropertyType.Color:
-									prop.colorValue = EditorGUILayout.ColorField(GUIContent.none, prop.colorValue, true,
-										colorUsageAttr?.showAlpha ?? true, colorUsageAttr?.hdr ?? false, opts);
-									break;
-								default:
-									EditorGUILayout.PropertyField(prop, GUIContent.none, opts);
-									break;
+								FieldInfo field = obj.GetType().GetField(prop.name,
+									BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+								var rangeAttr = field?.GetCustomAttribute<RangeAttribute>(true);
+								var minAttr = field?.GetCustomAttribute<MinAttribute>(true);
+								var textAreaAttr = field?.GetCustomAttribute<TextAreaAttribute>(true);
+								var colorUsageAttr = field?.GetCustomAttribute<ColorUsageAttribute>(true);
+								var opts = new[] {GUILayout.Width(col.width)};
+								switch (prop.propertyType)
+								{
+									case SerializedPropertyType.Float when rangeAttr != null:
+										prop.floatValue = EditorGUILayout.Slider(prop.floatValue, rangeAttr.min,
+											rangeAttr.max, opts);
+										break;
+									case SerializedPropertyType.Integer when rangeAttr != null:
+										prop.intValue = EditorGUILayout.IntSlider(prop.intValue, (int) rangeAttr.min,
+											(int) rangeAttr.max, opts);
+										break;
+									case SerializedPropertyType.Float when minAttr != null:
+										prop.floatValue = Mathf.Max(minAttr.min,
+											EditorGUILayout.FloatField(prop.floatValue, opts));
+										break;
+									case SerializedPropertyType.Integer when minAttr != null:
+										prop.intValue = Mathf.Max((int) minAttr.min,
+											EditorGUILayout.IntField(prop.intValue, opts));
+										break;
+									case SerializedPropertyType.String when textAreaAttr != null:
+										string s = EditorGUILayout.TextArea(prop.stringValue, opts);
+										prop.stringValue = s;
+										break;
+									case SerializedPropertyType.Color:
+										prop.colorValue = EditorGUILayout.ColorField(GUIContent.none, prop.colorValue,
+											true, colorUsageAttr?.showAlpha ?? true, colorUsageAttr?.hdr ?? false,
+											opts);
+										break;
+									default:
+										EditorGUILayout.PropertyField(prop, GUIContent.none, opts);
+										break;
+								}
 							}
 						}
 					}
