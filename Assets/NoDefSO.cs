@@ -10,4 +10,5 @@ public class NoDefSO : ScriptableObject
     public Material TestMaterial;
     public Camera TestCamera;
     public Color TestColor;
+    public Color TestColor2;
 }
