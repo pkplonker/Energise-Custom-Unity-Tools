@@ -36,6 +36,9 @@ namespace ScriptableObjectEditor
 
 		private List<Column> columns = new();
 		private static SelectionParams selectionParams;
+		private HashSet<int> selectedRows = new();
+		private int lastClickedRow = -1;
+		private float cellPadding = 4;
 
 		[MenuItem("Window/Energise Tools/Scriptable Object Editor &%S")]
 		public static void ShowWindow() => GetWindow<ScriptableObjectEditorWindow>("Scriptable Object Editor");
@@ -154,14 +157,21 @@ namespace ScriptableObjectEditor
 				}
 			}
 
+			var allProps = propPaths.ToHashSet();
+			columns.RemoveAll(c => c.kind == Column.Kind.Property && !allProps.Contains(c.propertyPath));
+
+			var existingProps = columns.Where(c => c.kind == Column.Kind.Property).Select(c => c.propertyPath)
+				.ToHashSet();
+			foreach (var p in propPaths)
+			{
+				if (!existingProps.Contains(p))
+					columns.Add(new Column(Column.Kind.Property, p, Mathf.Max(100, p.Length * 10), p));
+			}
+
 			var w = SOEPrefs.LoadColumnWidthsForCurrentType(selectedTypeIndex, TypeHandler.ScriptableObjectTypes);
 			if (w != null)
-			{
 				for (int i = 0; i < w.Count && i < columns.Count; i++)
-				{
 					columns[i].width = w[i];
-				}
-			}
 
 			ApplySorting();
 		}
@@ -484,92 +494,171 @@ namespace ScriptableObjectEditor
 			int dropIndex = -1;
 			var e = Event.current;
 			if (isReordering && e.rawType == EventType.Repaint)
-			{
 				dropIndex = GetColumnIndexAtPosition(e.mousePosition.x);
-			}
 
 			using (new SOERegion())
 			{
 				for (int i = 0; i < totalCols; i++)
 				{
 					DrawHeaderCell(columns[i].label, columns[i].width, i);
+					if (i < columns.Count - 1)
+						GUILayout.Space(cellPadding);
 					if (i == dropIndex)
 					{
-						Rect rect = GUILayoutUtility.GetLastRect();
-						EditorGUI.DrawRect(rect, new Color(0f, 0.5f, 1f, 0.3f));
+						Rect hdrRect = GUILayoutUtility.GetLastRect();
+						EditorGUI.DrawRect(hdrRect, new Color(0f, 0.5f, 1f, 0.3f));
 					}
 				}
 			}
 
 			var toAdd = new List<ScriptableObject>();
 			var toRemove = new List<ScriptableObject>();
-			var objs = TypeHandler.CurrentTypeObjects.ToList();
-			foreach (var obj in objs)
+			int rowIndex = 0;
+
+			foreach (var obj in TypeHandler.CurrentTypeObjects)
 			{
-				var so = new SerializedObject(obj);
 				using (new SOERegion())
 				{
-					var drawCols = columns.ToList();
-					foreach (var col in drawCols)
+					for (int i = 0; i < columns.Count; i++)
 					{
+						var col = columns[i];
+
+						var opts = new[] {GUILayout.Width(col.width), GUILayout.Height(18)};
+
 						if (col.kind == Column.Kind.BuiltIn)
 						{
-							col.drawAction(obj, toAdd, toRemove,
-								new GUILayoutOption[] {GUILayout.Width(col.width), GUILayout.Height(18)});
+							col.drawAction(obj, toAdd, toRemove, opts);
 						}
 						else
 						{
+							var so = new SerializedObject(obj);
 							var prop = so.FindProperty(col.propertyPath);
 							if (prop == null)
 							{
-								GUILayout.Label(GUIContent.none, GUILayout.Width(col.width));
+								GUILayout.Label(GUIContent.none, opts);
 							}
 							else
 							{
-								FieldInfo field = obj.GetType().GetField(prop.name,
-									BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-								var rangeAttr = field?.GetCustomAttribute<RangeAttribute>(true);
-								var minAttr = field?.GetCustomAttribute<MinAttribute>(true);
-								var textAreaAttr = field?.GetCustomAttribute<TextAreaAttribute>(true);
-								var colorUsageAttr = field?.GetCustomAttribute<ColorUsageAttribute>(true);
-								var opts = new[] {GUILayout.Width(col.width)};
+								EditorGUI.BeginChangeCheck();
 								switch (prop.propertyType)
 								{
-									case SerializedPropertyType.Float when rangeAttr != null:
-										prop.floatValue = EditorGUILayout.Slider(prop.floatValue, rangeAttr.min,
-											rangeAttr.max, opts);
+									case SerializedPropertyType.Float:
+										float newF = EditorGUILayout.FloatField(prop.floatValue, opts);
+										if (EditorGUI.EndChangeCheck())
+											foreach (int idx in selectedRows)
+											{
+												var tgt = new SerializedObject(TypeHandler.CurrentTypeObjects[idx]);
+												var p = tgt.FindProperty(col.propertyPath);
+												p.floatValue = newF;
+												tgt.ApplyModifiedProperties();
+											}
+
 										break;
-									case SerializedPropertyType.Integer when rangeAttr != null:
-										prop.intValue = EditorGUILayout.IntSlider(prop.intValue, (int) rangeAttr.min,
-											(int) rangeAttr.max, opts);
+									case SerializedPropertyType.Integer:
+										int newI = EditorGUILayout.IntField(prop.intValue, opts);
+										if (EditorGUI.EndChangeCheck())
+											foreach (int idx in selectedRows)
+											{
+												var tgt = new SerializedObject(TypeHandler.CurrentTypeObjects[idx]);
+												var p = tgt.FindProperty(col.propertyPath);
+												p.intValue = newI;
+												tgt.ApplyModifiedProperties();
+											}
+
 										break;
-									case SerializedPropertyType.Float when minAttr != null:
-										prop.floatValue = Mathf.Max(minAttr.min,
-											EditorGUILayout.FloatField(prop.floatValue, opts));
-										break;
-									case SerializedPropertyType.Integer when minAttr != null:
-										prop.intValue = Mathf.Max((int) minAttr.min,
-											EditorGUILayout.IntField(prop.intValue, opts));
-										break;
-									case SerializedPropertyType.String when textAreaAttr != null:
-										string s = EditorGUILayout.TextArea(prop.stringValue, opts);
-										prop.stringValue = s;
+									case SerializedPropertyType.String:
+										string newS = EditorGUILayout.TextField(prop.stringValue, opts);
+										if (EditorGUI.EndChangeCheck())
+											foreach (int idx in selectedRows)
+											{
+												var tgt = new SerializedObject(TypeHandler.CurrentTypeObjects[idx]);
+												var p = tgt.FindProperty(col.propertyPath);
+												p.stringValue = newS;
+												tgt.ApplyModifiedProperties();
+											}
+
 										break;
 									case SerializedPropertyType.Color:
-										prop.colorValue = EditorGUILayout.ColorField(GUIContent.none, prop.colorValue,
-											true, colorUsageAttr?.showAlpha ?? true, colorUsageAttr?.hdr ?? false,
-											opts);
+										Color newC = EditorGUILayout.ColorField(GUIContent.none, prop.colorValue, true,
+											true, false, opts);
+										if (EditorGUI.EndChangeCheck())
+											foreach (int idx in selectedRows)
+											{
+												var tgt = new SerializedObject(TypeHandler.CurrentTypeObjects[idx]);
+												var p = tgt.FindProperty(col.propertyPath);
+												p.colorValue = newC;
+												tgt.ApplyModifiedProperties();
+											}
+
+										break;
+									case SerializedPropertyType.ObjectReference:
+									{
+										UnityEngine.Object newObj =
+											EditorGUILayout.ObjectField(
+												prop.objectReferenceValue,
+												typeof(UnityEngine.Object),
+												allowSceneObjects: false,
+												opts);
+										if (EditorGUI.EndChangeCheck())
+										{
+											foreach (int idx in selectedRows)
+											{
+												var tgt = new SerializedObject(TypeHandler.CurrentTypeObjects[idx]);
+												var p = tgt.FindProperty(col.propertyPath);
+												p.objectReferenceValue = newObj;
+												tgt.ApplyModifiedProperties();
+											}
+										}
+									}
 										break;
 									default:
 										EditorGUILayout.PropertyField(prop, GUIContent.none, opts);
+										if (EditorGUI.EndChangeCheck())
+											foreach (int idx in selectedRows)
+											{
+												var tgt = new SerializedObject(TypeHandler.CurrentTypeObjects[idx]);
+												tgt.ApplyModifiedProperties();
+											}
+
 										break;
 								}
 							}
 						}
+
+						if (i < columns.Count - 1)
+							GUILayout.Space(cellPadding);
 					}
 				}
 
-				so.ApplyModifiedProperties();
+				Rect rowRect = GUILayoutUtility.GetLastRect();
+				bool isSelected = selectedRows.Contains(rowIndex);
+				if (Event.current.type == EventType.Repaint && isSelected)
+					EditorGUI.DrawRect(rowRect, new Color(0.2f, 0.5f, 1f, 0.1f));
+
+				if (Event.current.type == EventType.MouseDown && rowRect.Contains(Event.current.mousePosition))
+				{
+					if (Event.current.shift && lastClickedRow >= 0)
+					{
+						int start = Mathf.Min(lastClickedRow, rowIndex);
+						int end = Mathf.Max(lastClickedRow, rowIndex);
+						for (int i = start; i <= end; i++) selectedRows.Add(i);
+					}
+					else if (Event.current.control)
+					{
+						if (!selectedRows.Remove(rowIndex))
+							selectedRows.Add(rowIndex);
+					}
+					else
+					{
+						selectedRows.Clear();
+						selectedRows.Add(rowIndex);
+					}
+
+					lastClickedRow = rowIndex;
+					Event.current.Use();
+				}
+
+				rowIndex++;
 			}
 
 			SOEIO.AddAssets(toAdd);
