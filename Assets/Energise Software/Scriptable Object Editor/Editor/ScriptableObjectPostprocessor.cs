@@ -30,7 +30,7 @@ namespace ScriptableObjectEditor
 					var windows = Resources.FindObjectsOfTypeAll<ScriptableObjectEditorWindow>();
 					foreach (var window in windows)
 					{
-						window.LoadObjectsOfType(window.scriptableObjectTypes[window.selectedTypeIndex]);
+						window.RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[window.selectedTypeIndex]);
 					}
 				}
 			}
