@@ -39,6 +39,7 @@ namespace ScriptableObjectEditor
 		private HashSet<int> selectedRows = new();
 		private int lastClickedRow = -1;
 		private float cellPadding = 4;
+		private int tabChoice;
 
 		[MenuItem("Window/Energise Tools/Scriptable Object Editor &%S")]
 		public static void ShowWindow() => GetWindow<ScriptableObjectEditorWindow>("Scriptable Object Editor");
@@ -202,120 +203,22 @@ namespace ScriptableObjectEditor
 
 		private void OnGUI()
 		{
-			scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-
 			using (new SOERegion(true))
 			{
 				EditorGUILayout.LabelField("Asset Management", EditorStyles.boldLabel);
-				var expand = Fold("Assemblies", "Options for finding scriptable assets");
-				if (expand)
+				string[] tabs = new[] {"Asset Management", "Stats"};
+				tabChoice = GUILayout.Toolbar(tabChoice, tabs, GUILayout.Height(24));
+
+				if (tabChoice == 0)
 				{
-					using (new SOERegion())
-					{
-						EditorGUILayout.LabelField(new GUIContent("Path", "Where to search for scriptable assets"),
-							GUILayout.Width(40));
-						selectionParams.assetsFolderPath =
-							EditorGUILayout.TextField(selectionParams.assetsFolderPath, GUILayout.Width(200));
-						if (GUILayout.Button(new GUIContent("Browse", "Select folder to search for scriptable assets"),
-							    GUILayout.Width(80)))
-						{
-							string sel = EditorUtility.OpenFolderPanel("Select Scriptable Object Folder",
-								selectionParams.assetsFolderPath, "");
-							if (!string.IsNullOrEmpty(sel))
-							{
-								selectionParams.assetsFolderPath = sel.Replace(Application.dataPath, "Assets");
-								RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes.FirstOrDefault());
-							}
-						}
-
-						if (GUILayout.Button(EditorGUIUtility.IconContent("d_Refresh"), GUILayout.Width(35)))
-						{
-							TypeHandler.LoadAvailableAssemblies(selectionParams);
-							RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes.FirstOrDefault());
-						}
-
-						int newAsm = EditorGUILayout.Popup(selectedAssemblyIndex, TypeHandler.AssemblyNames,
-							GUILayout.Width(200));
-						if (newAsm != selectedAssemblyIndex)
-						{
-							selectedAssemblyIndex = newAsm;
-
-							RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes.FirstOrDefault());
-						}
-
-						TypeHandler.LoadScriptableObjectTypes(selectionParams);
-					}
+					DrawAssetManagement();
+				}
+				else if (tabChoice == 1)
+				{
+					DrawStats();
 				}
 
 				EditorGUILayout.Space();
-
-				var expanded = Fold("Stats");
-				if (expanded)
-				{
-					using (new SOERegion())
-					{
-						EditorGUILayout.LabelField($"Count: {TypeHandler.CurrentTypeObjects.Count}",
-							GUILayout.Width(100));
-						EditorGUILayout.LabelField(
-							$"Total Memory: {TypeHandler.MemoryStats.totalMemoryAll / 1024f:F1} KB",
-							GUILayout.Width(140));
-						EditorGUILayout.LabelField(
-							$"Filtered Memory: {TypeHandler.MemoryStats.totalMemoryFiltered / 1024f:F1} KB",
-							GUILayout.Width(160));
-						GUILayout.FlexibleSpace();
-					}
-				}
-
-				using (new SOERegion())
-				{
-					EditorGUILayout.LabelField(new GUIContent("Type", "The currently selected scriptableobject type"),
-						GUILayout.Width(40));
-					int newTypeIdx =
-						EditorGUILayout.Popup(selectedTypeIndex, TypeHandler.TypeNames, GUILayout.Width(200));
-					if (newTypeIdx != selectedTypeIndex)
-					{
-						selectedTypeIndex = newTypeIdx;
-						RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[selectedTypeIndex]);
-					}
-
-					EditorGUI.BeginChangeCheck();
-					bool inc = EditorGUILayout.ToggleLeft(
-						new GUIContent("Include Derived", "Tick to include inherited/derived types in view"),
-						selectionParams.includeDerivedTypes,
-						GUILayout.Width(120));
-					if (EditorGUI.EndChangeCheck() && inc != selectionParams.includeDerivedTypes)
-					{
-						selectionParams.includeDerivedTypes = inc;
-						TypeHandler.LoadScriptableObjectTypes(selectionParams);
-						RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[selectedTypeIndex]);
-					}
-
-					EditorGUILayout.LabelField(new GUIContent("Filter Types", "Text filtering of types to display"),
-						GUILayout.Width(80));
-
-					var newTypeSearch =
-						EditorGUILayout.TextField(selectionParams.typeSearchString, GUILayout.Width(200));
-					if (newTypeSearch != selectionParams.typeSearchString)
-					{
-						selectionParams.typeSearchString = newTypeSearch;
-						TypeHandler.LoadScriptableObjectTypes(selectionParams);
-						RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes.FirstOrDefault());
-					}
-				}
-
-				using (new SOERegion())
-				{
-					EditorGUILayout.LabelField(
-						new GUIContent("Filter Instances", "Only show instances matching the filter text"),
-						GUILayout.Width(100));
-					var newInstSearch =
-						EditorGUILayout.TextField(selectionParams.instanceSearchString, GUILayout.Width(200));
-					if (newInstSearch != selectionParams.instanceSearchString)
-					{
-						selectionParams.instanceSearchString = newInstSearch;
-						RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[selectedTypeIndex]);
-					}
-				}
 
 				using (new SOERegion())
 				{
@@ -331,15 +234,141 @@ namespace ScriptableObjectEditor
 					createCount = EditorGUILayout.IntField(createCount, GUILayout.Width(40));
 					createCount = Mathf.Max(1, createCount);
 				}
+			}
 
-				EditorGUILayout.Space();
-				if (TypeHandler.CurrentTypeObjects.Any() && TypeHandler.TypeNames.Any())
-				{
-					DrawPropertiesGrid();
-				}
+			int totalCols = columns.Count;
+			int dropIndex = -1;
+			var e = Event.current;
+			if (isReordering && e.rawType == EventType.Repaint)
+				dropIndex = GetColumnIndexAtPosition(e.mousePosition.x);
+			EditorGUILayout.Space();
+
+			DrawHeaders(totalCols, dropIndex);
+
+			scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+			if (TypeHandler.CurrentTypeObjects.Any() && TypeHandler.TypeNames.Any())
+			{
+				DrawPropertiesGrid();
 			}
 
 			EditorGUILayout.EndScrollView();
+		}
+
+		private static void DrawStats()
+		{
+			using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+			{
+				GUILayout.Label($"Count: {TypeHandler.CurrentTypeObjects.Count}", GUILayout.Width(100));
+				GUILayout.Label($"Total Memory: {TypeHandler.MemoryStats.totalMemoryAll / 1024f:F1} KB",
+					GUILayout.Width(140));
+				GUILayout.Label($"Filtered Memory: {TypeHandler.MemoryStats.totalMemoryFiltered / 1024f:F1} KB",
+					GUILayout.Width(160));
+			}
+		}
+
+		private void DrawAssetManagement()
+		{
+			using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+			{
+				using (new SOERegion())
+				{
+					GUILayout.Label("Path", GUILayout.Width(40));
+					selectionParams.assetsFolderPath =
+						GUILayout.TextField(selectionParams.assetsFolderPath, GUILayout.Width(200));
+					if (GUILayout.Button("Browse", GUILayout.Width(80)))
+					{
+						string sel = EditorUtility.OpenFolderPanel("Select Scriptable Object Folder",
+							selectionParams.assetsFolderPath, "");
+						if (!string.IsNullOrEmpty(sel))
+						{
+							selectionParams.assetsFolderPath = sel.Replace(Application.dataPath, "Assets");
+							RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes.FirstOrDefault());
+						}
+					}
+
+					if (GUILayout.Button(EditorGUIUtility.IconContent("d_Refresh"), GUILayout.Width(35)))
+					{
+						TypeHandler.LoadAvailableAssemblies(selectionParams);
+						RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes.FirstOrDefault());
+					}
+				}
+
+				using (new SOERegion())
+				{
+					GUILayout.Label("Assembly", GUILayout.Width(60));
+					int newAsm = EditorGUILayout.Popup(selectedAssemblyIndex, TypeHandler.AssemblyNames,
+						GUILayout.Width(200));
+					if (newAsm != selectedAssemblyIndex)
+					{
+						selectedAssemblyIndex = newAsm;
+						RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[selectedTypeIndex]);
+					}
+				}
+
+				using (new SOERegion())
+				{
+					GUILayout.Label("Displayed Type", GUILayout.Width(100));
+					int newTypeIdx = EditorGUILayout.Popup(selectedTypeIndex, TypeHandler.TypeNames,
+						GUILayout.Width(200));
+					if (newTypeIdx != selectedTypeIndex)
+					{
+						selectedTypeIndex = newTypeIdx;
+						RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[selectedTypeIndex]);
+					}
+
+					EditorGUI.BeginChangeCheck();
+					bool inc = EditorGUILayout.ToggleLeft("Include Derived", selectionParams.includeDerivedTypes,
+						GUILayout.Width(120));
+					if (EditorGUI.EndChangeCheck())
+					{
+						selectionParams.includeDerivedTypes = inc;
+						TypeHandler.LoadScriptableObjectTypes(selectionParams);
+						RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[selectedTypeIndex]);
+					}
+				}
+
+				using (new SOERegion())
+				{
+					GUILayout.Label("Filter Types:", GUILayout.Width(80));
+					var newTypeSearch = GUILayout.TextField(selectionParams.typeSearchString, GUILayout.Width(200));
+					if (newTypeSearch != selectionParams.typeSearchString)
+					{
+						selectionParams.typeSearchString = newTypeSearch;
+						TypeHandler.LoadScriptableObjectTypes(selectionParams);
+						RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes.FirstOrDefault());
+					}
+				}
+
+				using (new SOERegion())
+				{
+					GUILayout.Label("Filter Instances:", GUILayout.Width(100));
+					var newInstSearch =
+						GUILayout.TextField(selectionParams.instanceSearchString, GUILayout.Width(200));
+					if (newInstSearch != selectionParams.instanceSearchString)
+					{
+						selectionParams.instanceSearchString = newInstSearch;
+						RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[selectedTypeIndex]);
+					}
+				}
+			}
+		}
+
+		private void DrawHeaders(int totalCols, int dropIndex)
+		{
+			using (new SOERegion())
+			{
+				for (int i = 0; i < totalCols; i++)
+				{
+					DrawHeaderCell(columns[i].label, columns[i].width, i);
+					if (i < columns.Count - 1)
+						GUILayout.Space(cellPadding);
+					if (i == dropIndex)
+					{
+						Rect hdrRect = GUILayoutUtility.GetLastRect();
+						EditorGUI.DrawRect(hdrRect, new Color(0f, 0.5f, 1f, 0.3f));
+					}
+				}
+			}
 		}
 
 		private void ReorderColumn(int src, int dst)
@@ -497,27 +526,6 @@ namespace ScriptableObjectEditor
 
 		private void DrawPropertiesGrid()
 		{
-			int totalCols = columns.Count;
-			int dropIndex = -1;
-			var e = Event.current;
-			if (isReordering && e.rawType == EventType.Repaint)
-				dropIndex = GetColumnIndexAtPosition(e.mousePosition.x);
-
-			using (new SOERegion())
-			{
-				for (int i = 0; i < totalCols; i++)
-				{
-					DrawHeaderCell(columns[i].label, columns[i].width, i);
-					if (i < columns.Count - 1)
-						GUILayout.Space(cellPadding);
-					if (i == dropIndex)
-					{
-						Rect hdrRect = GUILayoutUtility.GetLastRect();
-						EditorGUI.DrawRect(hdrRect, new Color(0f, 0.5f, 1f, 0.3f));
-					}
-				}
-			}
-
 			var toAdd = new List<ScriptableObject>();
 			var toRemove = new List<ScriptableObject>();
 			int rowIndex = 0;
