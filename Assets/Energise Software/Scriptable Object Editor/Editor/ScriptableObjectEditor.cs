@@ -40,10 +40,8 @@ namespace ScriptableObjectEditor
 		[MenuItem("Window/Energise Tools/Scriptable Object Editor &%S")]
 		public static void ShowWindow() => GetWindow<ScriptableObjectEditorWindow>("Scriptable Object Editor");
 
-		static ScriptableObjectEditorWindow()
-		{
+		static ScriptableObjectEditorWindow() =>
 			AssemblyReloadEvents.afterAssemblyReload += OnAfterAssemblyReload;
-		}
 
 		private static void OnAfterAssemblyReload()
 		{
@@ -80,9 +78,9 @@ namespace ScriptableObjectEditor
 			columns.Add(new Column(Column.Kind.BuiltIn, "Instance Name", 150, null,
 				(obj, toAdd, toRemove, opts) =>
 				{
-					string path = AssetDatabase.GetAssetPath(obj);
-					string oldName = obj.name;
-					string newName = EditorGUILayout.TextField(oldName, opts);
+					var path = AssetDatabase.GetAssetPath(obj);
+					var oldName = obj.name;
+					var newName = EditorGUILayout.TextField(oldName, opts);
 					if (newName != oldName)
 					{
 						AssetDatabase.RenameAsset(path, newName);
@@ -111,7 +109,9 @@ namespace ScriptableObjectEditor
 				propPaths = GetPropertyPaths(firstSO.GetIterator());
 			}
 
+			var builtInTemplate = columns.Where(c => c.kind == Column.Kind.BuiltIn).ToList();
 			columns.Clear();
+
 			var orderList =
 				SOEPrefs.LoadInterleavedColumnOrderForCurrentType(selectedTypeIndex, TypeHandler.ScriptableObjectTypes);
 			if (orderList != null)
@@ -120,37 +120,19 @@ namespace ScriptableObjectEditor
 				{
 					if (entry.StartsWith("[H]"))
 					{
-						string label = entry.Substring(3);
+						var label = entry.Substring(3);
 						var def = BuiltInHeaders.FirstOrDefault(h => h.Label == label);
 						if (def == null) continue;
-						Action<ScriptableObject, List<ScriptableObject>, List<ScriptableObject>, GUILayoutOption[]>
-							action;
-						if (label == "Instance Name")
-						{
-							action = (obj, toAdd, toRemove, opts) =>
-							{
-								string path = AssetDatabase.GetAssetPath(obj);
-								string oldName = obj.name;
-								string newName = EditorGUILayout.TextField(oldName, opts);
-								if (newName != oldName)
-								{
-									AssetDatabase.RenameAsset(path, newName);
-									AssetDatabase.SaveAssets();
-									obj.name = newName;
-								}
-							};
-						}
-						else
-						{
-							action = GetBuiltInDrawAction(def.Label);
-						}
-
-						columns.Add(new Column(Column.Kind.BuiltIn, def.Label, def.Width, null, action));
+						var template = builtInTemplate.FirstOrDefault(t => t.label == label);
+						var action = template != null
+							? template.drawAction
+							: GetBuiltInDrawAction(label);
+						columns.Add(new Column(Column.Kind.BuiltIn, label, def.Width, null, action));
 					}
 					else
 					{
-						string path = entry.Substring(3);
-						float wi = Mathf.Max(100, path.Length * 10);
+						var path = entry.Substring(3);
+						var wi = Mathf.Max(100, path.Length * 10);
 						columns.Add(new Column(Column.Kind.Property, path, wi, path));
 					}
 				}
@@ -159,18 +141,27 @@ namespace ScriptableObjectEditor
 			{
 				foreach (var h in BuiltInHeaders)
 				{
-					var action = GetBuiltInDrawAction(h.Label);
+					var template = builtInTemplate.FirstOrDefault(t => t.label == h.Label);
+					var action = template != null
+						? template.drawAction
+						: GetBuiltInDrawAction(h.Label);
 					columns.Add(new Column(Column.Kind.BuiltIn, h.Label, h.Width, null, action));
 				}
 
 				foreach (var path in propPaths)
+				{
 					columns.Add(new Column(Column.Kind.Property, path, Mathf.Max(100, path.Length * 10), path));
+				}
 			}
 
 			var w = SOEPrefs.LoadColumnWidthsForCurrentType(selectedTypeIndex, TypeHandler.ScriptableObjectTypes);
 			if (w != null)
+			{
 				for (int i = 0; i < w.Count && i < columns.Count; i++)
+				{
 					columns[i].width = w[i];
+				}
+			}
 
 			ApplySorting();
 		}
@@ -595,11 +586,6 @@ namespace ScriptableObjectEditor
 				} while (iter.NextVisible(false));
 
 			return paths;
-		}
-
-		private List<string> GetPropertyPathList()
-		{
-			return columns.Where(c => c.kind == Column.Kind.Property).Select(c => c.propertyPath).ToList();
 		}
 	}
 }
