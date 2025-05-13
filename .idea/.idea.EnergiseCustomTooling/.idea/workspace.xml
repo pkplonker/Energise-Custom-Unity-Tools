@@ -116,7 +116,7 @@
       <option name="presentableId" value="Default" />
       <updated>1746224202112</updated>
       <workItem from="1746224202818" duration="3148000" />
-      <workItem from="1746822908001" duration="26680000" />
+      <workItem from="1746822908001" duration="27336000" />
     </task>
     <servers />
   </component>
@@ -139,26 +139,26 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="DotNet Breakpoints">
           <url>file://$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/Editor/ScriptableObjectEditor.cs</url>
-          <line>78</line>
+          <line>76</line>
           <properties documentPath="S:\Users\pkplo\OneDrive\Documents\UnityProjects\EnergiseCustomTooling\Assets\Energise Software\Scriptable Object Editor\Editor\ScriptableObjectEditor.cs" containingFunctionPresentation="Method 'OnEnable'">
             <startOffsets>
-              <option value="2077" />
+              <option value="2026" />
             </startOffsets>
             <endOffsets>
-              <option value="2097" />
+              <option value="2046" />
             </endOffsets>
           </properties>
           <option name="timeStamp" value="19" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DotNet Breakpoints">
           <url>file://$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/Editor/ScriptableObjectEditor.cs</url>
-          <line>121</line>
+          <line>119</line>
           <properties documentPath="S:\Users\pkplo\OneDrive\Documents\UnityProjects\EnergiseCustomTooling\Assets\Energise Software\Scriptable Object Editor\Editor\ScriptableObjectEditor.cs" containingFunctionPresentation="Method 'InitializeColumns'">
             <startOffsets>
-              <option value="3394" />
+              <option value="3326" />
             </startOffsets>
             <endOffsets>
-              <option value="3410" />
+              <option value="3342" />
             </endOffsets>
           </properties>
           <option name="timeStamp" value="20" />

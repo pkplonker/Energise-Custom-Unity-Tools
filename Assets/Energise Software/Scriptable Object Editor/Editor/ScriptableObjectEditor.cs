@@ -1,10 +1,8 @@
 using UnityEditor;
 using UnityEngine;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityEditor.IMGUI.Controls;
 
 namespace ScriptableObjectEditor
@@ -84,12 +82,12 @@ namespace ScriptableObjectEditor
 			RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes.FirstOrDefault());
 			tabs = new List<Tab>()
 			{
-				new Tab("Hide", () => { }),
-				new Tab("Asset Management", DrawAssetManagement),
-				new Tab("Stats", DrawStats),
-				new Tab("Info", RenderInfo),
+				new ("Hide", () => { }),
+				new ("Asset Management", DrawAssetManagement),
+				new ("Stats", DrawStats),
+				new ("Info", RenderInfo),
 			};
-			tabChoice = SOEPrefs.Load<int>("tabChoice", 0);
+			tabChoice = SOEPrefs.Load("tabChoice", 0);
 			EnsureColumnFiltersAndRects();
 		}
 
@@ -123,12 +121,12 @@ namespace ScriptableObjectEditor
 			columns.Add(new Column(Column.Kind.BuiltIn, "Copy", 35, null,
 				(obj, toAdd, toRemove, opts) =>
 				{
-					if (GUILayout.Button(EditorGUIUtility.IconContent("d_Toolbar Plus"), opts)) toAdd.Add(obj);
+					if (GUILayout.Button(EditorGUIUtility.IconContent("d_Toolbar Plus","|Copy this scriptable object"), opts)) toAdd.Add(obj);
 				}));
 			columns.Add(new Column(Column.Kind.BuiltIn, "Delete", 50, null,
 				(obj, toAdd, toRemove, opts) =>
 				{
-					if (GUILayout.Button(EditorGUIUtility.IconContent("d_TreeEditor.Trash"), opts)) toRemove.Add(obj);
+					if (GUILayout.Button(EditorGUIUtility.IconContent("d_TreeEditor.Trash", "|Delete this scriptable object"), opts)) toRemove.Add(obj);
 				}));
 			columns.Add(new Column(Column.Kind.BuiltIn, "Instance Name", 150, null,
 				(obj, toAdd, toRemove, opts) =>
@@ -236,12 +234,12 @@ namespace ScriptableObjectEditor
 				case "Copy":
 					return (obj, toAdd, toRemove, opts) =>
 					{
-						if (GUILayout.Button(EditorGUIUtility.IconContent("d_Toolbar Plus"), opts)) toAdd.Add(obj);
+						if (GUILayout.Button(EditorGUIUtility.IconContent("d_Toolbar Plus", "|Copy this scriptable object"), opts)) toAdd.Add(obj);
 					};
 				case "Delete":
 					return (obj, toAdd, toRemove, opts) =>
 					{
-						if (GUILayout.Button(EditorGUIUtility.IconContent("d_TreeEditor.Trash"), opts))
+						if (GUILayout.Button(EditorGUIUtility.IconContent("d_TreeEditor.Trash","|Delete this scriptable object"), opts))
 							toRemove.Add(obj);
 					};
 				default:
@@ -267,7 +265,7 @@ namespace ScriptableObjectEditor
 				{
 					if (GUILayout.Button(EditorGUIUtility.IconContent(
 							    "d_Toolbar Plus",
-							    "Add new instances"
+							    "|Add new instances"
 						    ), GUILayout.Width(30),
 						    GUILayout.Height(18)))
 					{
@@ -279,11 +277,11 @@ namespace ScriptableObjectEditor
 
 					createCount = EditorGUILayout.IntField(new GUIContent(
 						"",
-						"How many items should be created?"
+						"|How many items should be created?"
 					), createCount, GUILayout.Width(40));
 					createCount = Mathf.Max(1, createCount);
 					if (GUILayout.Button(
-						    EditorGUIUtility.IconContent("FilterByLabel", "Clear all column filters"),
+						    EditorGUIUtility.IconContent("FilterByLabel", "|Clear all column filters"),
 						    GUILayout.Width(24),
 						    GUILayout.Height(18)))
 					{
@@ -335,11 +333,11 @@ namespace ScriptableObjectEditor
 			{
 				using (new SOERegion())
 				{
-					GUILayout.Label("Path", GUILayout.Width(40));
+					GUILayout.Label("Path: ", GUILayout.Width(40));
 					selectionParams.assetsFolderPath =
 						GUILayout.TextField(selectionParams.assetsFolderPath, GUILayout.Width(200));
 					
-					if (GUILayout.Button(EditorGUIUtility.IconContent("d_Import", "Select folder to show scriptable objects in"), GUILayout.Width(30)))
+					if (GUILayout.Button(EditorGUIUtility.IconContent("d_Import", "|Select folder to show scriptable objects in"), GUILayout.Width(30)))
 					{
 						string sel = EditorUtility.OpenFolderPanel("Select Scriptable Object Folder",
 							selectionParams.assetsFolderPath, "");
@@ -350,7 +348,7 @@ namespace ScriptableObjectEditor
 						}
 					}
 
-					if (GUILayout.Button(EditorGUIUtility.IconContent("d_Refresh"), GUILayout.Width(35)))
+					if (GUILayout.Button(EditorGUIUtility.IconContent("d_Refresh", "|Refresh the loaded assemblies/Scriptable objects"), GUILayout.Width(35)))
 					{
 						TypeHandler.LoadAvailableAssemblies(selectionParams);
 						RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes.FirstOrDefault());
@@ -359,7 +357,7 @@ namespace ScriptableObjectEditor
 
 				using (new SOERegion())
 				{
-					GUILayout.Label("Assembly", GUILayout.Width(60));
+					GUILayout.Label("Assembly: ", GUILayout.Width(60));
 					int newAsm = EditorGUILayout.Popup(selectedAssemblyIndex, TypeHandler.AssemblyNames,
 						GUILayout.Width(200));
 					if (newAsm != selectedAssemblyIndex)
@@ -371,14 +369,8 @@ namespace ScriptableObjectEditor
 
 				using (new SOERegion())
 				{
-					GUILayout.Label("Type", GUILayout.Width(40));
-					GUILayout.Label("Search:", GUILayout.Width(50));
-					string newTypeFilter = GUILayout.TextField(selectionParams.typeSearchString, GUILayout.Width(100));
-					if (newTypeFilter != selectionParams.typeSearchString)
-					{
-						selectionParams.typeSearchString = newTypeFilter;
-						TypeHandler.LoadScriptableObjectTypes(selectionParams);
-					}
+					GUILayout.Label("Type: ", GUILayout.Width(40));
+					
 
 					var filteredNames = TypeHandler.TypeNames
 						.Where(n => n.IndexOf(selectionParams.typeSearchString, StringComparison.OrdinalIgnoreCase) >=
@@ -401,7 +393,13 @@ namespace ScriptableObjectEditor
 							RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[selectedTypeIndex]);
 						}
 					}
-
+					GUILayout.Label("Search: ", GUILayout.Width(50));
+					string newTypeFilter = GUILayout.TextField(selectionParams.typeSearchString, GUILayout.Width(100));
+					if (newTypeFilter != selectionParams.typeSearchString)
+					{
+						selectionParams.typeSearchString = newTypeFilter;
+						TypeHandler.LoadScriptableObjectTypes(selectionParams);
+					}
 					EditorGUI.BeginChangeCheck();
 					bool inc = EditorGUILayout.ToggleLeft("Include Derived", selectionParams.includeDerivedTypes,
 						GUILayout.Width(120));
@@ -528,7 +526,7 @@ namespace ScriptableObjectEditor
 			GUI.Label(cellRect, content, EditorStyles.boldLabel);
 
 			Rect iconRect = new Rect(cellRect.xMax - 16, cellRect.y + 2, 14, 14);
-			if (GUI.Button(iconRect, EditorGUIUtility.IconContent("Search Icon"), GUIStyle.none))
+			if (GUI.Button(iconRect, EditorGUIUtility.IconContent("Search Icon", "Filter scriptable object property"), GUIStyle.none))
 			{
 				ShowFilterPopup(columnIndex, iconRect);
 			}
