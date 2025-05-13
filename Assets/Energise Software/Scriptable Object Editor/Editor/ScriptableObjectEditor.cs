@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UnityEditor.IMGUI.Controls;
 
 namespace ScriptableObjectEditor
 {
@@ -34,13 +35,17 @@ namespace ScriptableObjectEditor
 			new Header("Instance Name", 150),
 		};
 
-		private List<Column> columns = new();
+		public List<Column> columns = new();
 		private static SelectionParams selectionParams;
 		private HashSet<int> selectedRows = new();
 		private int lastClickedRow = -1;
 		private float cellPadding = 4;
 		private int tabChoice;
 		private List<Tab> tabs;
+
+		private SearchField[] columnSearchFields;
+		public string[] columnFilterStrings;
+		private Rect[] lastHeaderCellRects;
 
 		[MenuItem("Window/Energise Tools/Scriptable Object Editor &%S")]
 		public static void ShowWindow() => GetWindow<ScriptableObjectEditorWindow>("Scriptable Object Editor");
@@ -56,16 +61,19 @@ namespace ScriptableObjectEditor
 			window.RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[window.selectedTypeIndex]);
 			window.Repaint();
 		}
+
 		private struct Tab
 		{
 			public string Label;
 			public Action Draw;
+
 			public Tab(string label, Action draw)
 			{
 				Label = label;
-				Draw  = draw;
+				Draw = draw;
 			}
 		}
+
 		private void OnEnable()
 		{
 			InitializeColumns();
@@ -76,13 +84,38 @@ namespace ScriptableObjectEditor
 			RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes.FirstOrDefault());
 			tabs = new List<Tab>()
 			{
-				new Tab("Hide",             () => { }),
+				new Tab("Hide", () => { }),
 				new Tab("Asset Management", DrawAssetManagement),
-				new Tab("Stats",            DrawStats),
-				new Tab("Info",             RenderInfo),
+				new Tab("Stats", DrawStats),
+				new Tab("Info", RenderInfo),
 			};
 			tabChoice = SOEPrefs.Load<int>("tabChoice", 0);
+			EnsureColumnFiltersAndRects();
 		}
+
+		private void EnsureColumnFiltersAndRects()
+		{
+			int count = columns.Count;
+
+			if (columnSearchFields == null || columnSearchFields.Length != count)
+			{
+				columnSearchFields = new SearchField[count];
+				columnFilterStrings = new string[count];
+				for (int i = 0; i < count; i++)
+				{
+					columnSearchFields[i] = new SearchField();
+					columnSearchFields[i].downOrUpArrowKeyPressed += OnColumnSearchNavigate;
+					columnFilterStrings[i] = string.Empty;
+				}
+			}
+
+			if (lastHeaderCellRects == null || lastHeaderCellRects.Length != count)
+			{
+				lastHeaderCellRects = new Rect[count];
+			}
+		}
+
+		private void OnColumnSearchNavigate() { }
 
 		private void InitializeColumns()
 		{
@@ -249,16 +282,19 @@ namespace ScriptableObjectEditor
 						"How many items should be created?"
 					), createCount, GUILayout.Width(40));
 					createCount = Mathf.Max(1, createCount);
-					using (new SOERegion())
+					if (GUILayout.Button(
+						    EditorGUIUtility.IconContent("FilterByLabel", "Clear all column filters"),
+						    GUILayout.Width(24),
+						    GUILayout.Height(18)))
 					{
-						GUILayout.Label("Filter Instances:", GUILayout.Width(100));
-						var newInstSearch =
-							GUILayout.TextField(selectionParams.instanceSearchString, GUILayout.Width(200));
-						if (newInstSearch != selectionParams.instanceSearchString)
+						selectionParams.instanceSearchString = string.Empty;
+						for (int i = 0; i < columnFilterStrings.Length; i++)
 						{
-							selectionParams.instanceSearchString = newInstSearch;
-							RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[selectedTypeIndex]);
+							columnFilterStrings[i] = string.Empty;
 						}
+
+						RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[selectedTypeIndex]);
+						ApplyAllFilters();
 					}
 				}
 			}
@@ -302,7 +338,8 @@ namespace ScriptableObjectEditor
 					GUILayout.Label("Path", GUILayout.Width(40));
 					selectionParams.assetsFolderPath =
 						GUILayout.TextField(selectionParams.assetsFolderPath, GUILayout.Width(200));
-					if (GUILayout.Button("Browse", GUILayout.Width(80)))
+					
+					if (GUILayout.Button(EditorGUIUtility.IconContent("d_Import", "Select folder to show scriptable objects in"), GUILayout.Width(30)))
 					{
 						string sel = EditorUtility.OpenFolderPanel("Select Scriptable Object Folder",
 							selectionParams.assetsFolderPath, "");
@@ -414,6 +451,7 @@ namespace ScriptableObjectEditor
 				TypeHandler.ScriptableObjectTypes,
 				columns
 			);
+			lastHeaderCellRects = new Rect[columns.Count];
 		}
 
 		private bool Fold(string key, string optionalTooltip = "")
@@ -481,12 +519,24 @@ namespace ScriptableObjectEditor
 
 		private void DrawHeaderCell(string label, float width, int columnIndex)
 		{
-			var content = new GUIContent(label + (sortColumnIndex == columnIndex ? (sortAscending ? " ▲" : " ▼") : ""));
+			EnsureColumnFiltersAndRects();
+
+			var content = new GUIContent(
+				label + (sortColumnIndex == columnIndex ? (sortAscending ? " ▲" : " ▼") : "")
+			);
 			Rect cellRect = GUILayoutUtility.GetRect(content, EditorStyles.boldLabel, GUILayout.Width(width));
 			GUI.Label(cellRect, content, EditorStyles.boldLabel);
+
+			Rect iconRect = new Rect(cellRect.xMax - 16, cellRect.y + 2, 14, 14);
+			if (GUI.Button(iconRect, EditorGUIUtility.IconContent("Search Icon"), GUIStyle.none))
+			{
+				ShowFilterPopup(columnIndex, iconRect);
+			}
+
 			Rect handleRect = new Rect(cellRect.xMax - 4, cellRect.y, 8, cellRect.height);
 			EditorGUIUtility.AddCursorRect(handleRect, MouseCursor.ResizeHorizontal);
 			var e = Event.current;
+
 			switch (e.rawType)
 			{
 				case EventType.MouseDown:
@@ -547,7 +597,41 @@ namespace ScriptableObjectEditor
 
 					break;
 			}
+
+			lastHeaderCellRects[columnIndex] = cellRect;
 		}
+
+		public void ApplyAllFilters()
+		{
+			var filtered = new List<ScriptableObject>();
+			foreach (var obj in TypeHandler.CurrentTypeObjectsOriginal)
+			{
+				bool keep = true;
+				for (int i = 0; i < columns.Count; i++)
+				{
+					var filter = columnFilterStrings[i];
+					if (string.IsNullOrEmpty(filter)) continue;
+
+					Column col = columns[i];
+					string cellText = col.kind == Column.Kind.BuiltIn && col.label == "Instance Name"
+						? obj.name
+						: $"{TypeHandler.GetPropertyValue(obj, col.propertyPath)}";
+
+					if (!cellText.Contains(filter, StringComparison.OrdinalIgnoreCase))
+					{
+						keep = false;
+						break;
+					}
+				}
+
+				if (keep) filtered.Add(obj);
+			}
+
+			TypeHandler.CurrentTypeObjects = filtered;
+		}
+
+		private void ShowFilterPopup(int columnIndex, Rect triggerRect) =>
+			PopupWindow.Show(triggerRect, new ColumnFilterPopup(columnIndex, this));
 
 		private void DrawPropertiesGrid()
 		{

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace ScriptableObjectEditor
 {
-	internal class Column
+	public class Column
 	{
 		public enum Kind
 		{

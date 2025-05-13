@@ -14,21 +14,25 @@ namespace ScriptableObjectEditor
 		internal static MemoryStats MemoryStats { get; private set; } = null;
 		internal static string[] TypeNames { get; private set; } = null;
 		private static List<Assembly> AvailableAssemblies = new();
-		internal static List<ScriptableObject> CurrentTypeObjects = new();
 		internal static List<Type> ScriptableObjectTypes;
 		internal static string[] AssemblyNames;
+		internal static List<ScriptableObject> CurrentTypeObjectsOriginal = new();
+		internal static List<ScriptableObject> CurrentTypeObjects = new();
+
 
 		internal static void LoadObjectsOfType(Type type, SelectionParams selectionParams)
 		{
 			MemoryStats ??= new MemoryStats();
-			CurrentTypeObjects.Clear();
 			MemoryStats.memoryUsage.Clear();
 			MemoryStats.totalMemoryAll = 0;
 			MemoryStats.totalMemoryFiltered = 0;
+			CurrentTypeObjects.Clear();
+			CurrentTypeObjectsOriginal.Clear();
+
 			if (type == null) return;
 
 			var all = new List<ScriptableObject>();
-			var guids = AssetDatabase.FindAssets("t:ScriptableObject", new[] {selectionParams.assetsFolderPath});
+			var guids = AssetDatabase.FindAssets("t:ScriptableObject", new[] { selectionParams.assetsFolderPath });
 			foreach (var guid in guids)
 			{
 				var path = AssetDatabase.GUIDToAssetPath(guid);
@@ -48,11 +52,13 @@ namespace ScriptableObjectEditor
 				MemoryStats.totalMemoryAll += mem;
 			}
 
+			CurrentTypeObjectsOriginal = all;
+
 			CurrentTypeObjects = string.IsNullOrEmpty(selectionParams.instanceSearchString)
-				? all
+				? new List<ScriptableObject>(all)
 				: all.Where(o =>
-						o.name.IndexOf(selectionParams.instanceSearchString, StringComparison.OrdinalIgnoreCase) >= 0)
-					.ToList();
+					o.name.IndexOf(selectionParams.instanceSearchString, StringComparison.OrdinalIgnoreCase) >= 0
+				).ToList();
 
 			foreach (var obj in CurrentTypeObjects)
 				MemoryStats.totalMemoryFiltered += MemoryStats.memoryUsage[obj];

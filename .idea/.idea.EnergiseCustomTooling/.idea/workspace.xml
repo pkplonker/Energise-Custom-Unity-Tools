@@ -30,11 +30,14 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/011ccacb58784a80ac4b48b4c50ee0b7176400/ce/db842a93/Profiler.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/1b603076721a49e29a4f83c592d24b9f2d600/5d/5bcf7a0a/GUILayout.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/50e19b0ed93a4256b2e454b4acec2d48958800/1e/f28cc43f/DockArea.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/50e19b0ed93a4256b2e454b4acec2d48958800/2d/599e527b/SearchField.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/50e19b0ed93a4256b2e454b4acec2d48958800/45/2868b240/SceneView.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/50e19b0ed93a4256b2e454b4acec2d48958800/66/b9dd6e38/EditorGUILayout.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/50e19b0ed93a4256b2e454b4acec2d48958800/70/5b15c4a7/EditorGUIUtility.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/50e19b0ed93a4256b2e454b4acec2d48958800/e3/295c7390/EditorStyles.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7ec34a9fe0b043f08800d3612cbf36c3179e00/0f/6ed0f422/RenderChain.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7ec34a9fe0b043f08800d3612cbf36c3179e00/2f/02d8d067/Panel.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7ec34a9fe0b043f08800d3612cbf36c3179e00/b7/479fc1e4/VisualTreeUpdater.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7ec34a9fe0b043f08800d3612cbf36c3179e00/df/2f35d7fe/IMGUIContainer.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/8ce0bd04a7a04b4b9395538239d3fdd846ac00/43/702da463/ThrowHelper.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/Editor/ScriptableObjectEditor.cs" root0="FORCE_HIGHLIGHTING" />
@@ -113,7 +116,7 @@
       <option name="presentableId" value="Default" />
       <updated>1746224202112</updated>
       <workItem from="1746224202818" duration="3148000" />
-      <workItem from="1746822908001" duration="23211000" />
+      <workItem from="1746822908001" duration="26680000" />
     </task>
     <servers />
   </component>
@@ -130,5 +133,37 @@
   <component name="VcsManagerConfiguration">
     <option name="LOCAL_CHANGES_DETAILS_PREVIEW_SHOWN" value="false" />
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DotNet Breakpoints">
+          <url>file://$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/Editor/ScriptableObjectEditor.cs</url>
+          <line>78</line>
+          <properties documentPath="S:\Users\pkplo\OneDrive\Documents\UnityProjects\EnergiseCustomTooling\Assets\Energise Software\Scriptable Object Editor\Editor\ScriptableObjectEditor.cs" containingFunctionPresentation="Method 'OnEnable'">
+            <startOffsets>
+              <option value="2077" />
+            </startOffsets>
+            <endOffsets>
+              <option value="2097" />
+            </endOffsets>
+          </properties>
+          <option name="timeStamp" value="19" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DotNet Breakpoints">
+          <url>file://$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/Editor/ScriptableObjectEditor.cs</url>
+          <line>121</line>
+          <properties documentPath="S:\Users\pkplo\OneDrive\Documents\UnityProjects\EnergiseCustomTooling\Assets\Energise Software\Scriptable Object Editor\Editor\ScriptableObjectEditor.cs" containingFunctionPresentation="Method 'InitializeColumns'">
+            <startOffsets>
+              <option value="3394" />
+            </startOffsets>
+            <endOffsets>
+              <option value="3410" />
+            </endOffsets>
+          </properties>
+          <option name="timeStamp" value="20" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
