@@ -294,6 +294,15 @@ namespace ScriptableObjectEditor
 						RefreshObjectsOfType(TypeHandler.ScriptableObjectTypes[selectedTypeIndex]);
 						ApplyAllFilters();
 					}
+					if (GUILayout.Button(
+						    new GUIContent(EditorGUIUtility.IconContent("d_winbtn_win_close").image, "Clear current selection"),
+						    GUILayout.Width(20),
+						    GUILayout.Height(18)))
+					{
+						selectedRows.Clear();
+						lastClickedRow = -1;
+						Repaint();
+					}
 				}
 			}
 
@@ -712,21 +721,24 @@ namespace ScriptableObjectEditor
 												tgt.ApplyModifiedProperties();
 											}
 
-										break;
+										break; 
 									case SerializedPropertyType.ObjectReference:
 									{
-										UnityEngine.Object newObj =
-											EditorGUILayout.ObjectField(
-												prop.objectReferenceValue,
-												typeof(UnityEngine.Object),
-												allowSceneObjects: false,
-												opts);
+										Rect fieldRect = GUILayoutUtility.GetRect(col.width, 18);
+
+										EditorGUI.BeginChangeCheck();
+										UnityEngine.Object newObj = EditorGUI.ObjectField(
+											fieldRect,
+											prop.objectReferenceValue,
+											typeof(UnityEngine.Object),
+											false
+										);
 										if (EditorGUI.EndChangeCheck())
 										{
 											foreach (int idx in selectedRows)
 											{
 												var tgt = new SerializedObject(TypeHandler.CurrentTypeObjects[idx]);
-												var p = tgt.FindProperty(col.propertyPath);
+												var p   = tgt.FindProperty(col.propertyPath);
 												p.objectReferenceValue = newObj;
 												tgt.ApplyModifiedProperties();
 											}
