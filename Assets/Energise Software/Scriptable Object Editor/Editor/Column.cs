@@ -4,29 +4,29 @@ using UnityEngine;
 
 namespace ScriptableObjectEditor
 {
-	public class Column
+	internal class Column
 	{
-		public enum Kind
+		internal enum ColumnType
 		{
 			BuiltIn,
 			Property
 		}
 
-		public Kind kind;
-		public string label;
-		public float width;
-		public string propertyPath;
-		public Action<ScriptableObject, List<ScriptableObject>, List<ScriptableObject>, GUILayoutOption[]> drawAction;
+		internal ColumnType ColType;
+		internal string Label;
+		internal float Width;
+		internal string PropertyPath;
+		internal Action<ScriptableObject, List<ScriptableObject>, List<ScriptableObject>, GUILayoutOption[]> DrawAction;
 
-		public Column(Kind k, string label, float width, string path = null,
+		internal Column(ColumnType k, string label, float width, string path = null,
 			Action<ScriptableObject, List<ScriptableObject>, List<ScriptableObject>, GUILayoutOption[]> drawAction =
 				null)
 		{
-			kind = k;
-			this.label = label;
-			this.width = width;
-			propertyPath = path;
-			this.drawAction = drawAction;
+			ColType = k;
+			Label = label;
+			Width = width;
+			PropertyPath = path;
+			DrawAction = drawAction;
 		}
 	}
 }

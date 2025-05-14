@@ -70,9 +70,9 @@ namespace ScriptableObjectEditor
 			string key = GetOrderKeyForType(scriptableObjectTypes[selectedTypeIndex]);
 
 			var items = columns.Select(c =>
-				c.kind == Column.Kind.BuiltIn
-					? "[H]" + c.label
-					: "[P]" + c.propertyPath
+				c.ColType == Column.ColumnType.BuiltIn
+					? "[H]" + c.Label
+					: "[P]" + c.PropertyPath
 			).ToList();
 
 			var wrapper = new SerializationWrapper {items = items};
@@ -80,7 +80,7 @@ namespace ScriptableObjectEditor
 			EditorPrefs.SetString(key, json);
 		}
 
-		public static void Save<T>(string tabChoiceKey, T tabChoice)
+		internal static void Save<T>(string tabChoiceKey, T tabChoice)
 		{
 			string prefsKey = $"SOEditor_{tabChoiceKey}";
 			Type t = typeof(T);
@@ -112,7 +112,7 @@ namespace ScriptableObjectEditor
 			}
 		}
 
-		public static T Load<T>(string tabChoiceKey, T defaultValue = default)
+		internal static T Load<T>(string tabChoiceKey, T defaultValue = default)
 		{
 			string prefsKey = $"SOEditor_{tabChoiceKey}";
 			Type t = typeof(T);
@@ -175,6 +175,6 @@ namespace ScriptableObjectEditor
 	[Serializable]
 	internal class SerializationWrapper
 	{
-		public List<string> items;
+		internal List<string> items;
 	}
 }

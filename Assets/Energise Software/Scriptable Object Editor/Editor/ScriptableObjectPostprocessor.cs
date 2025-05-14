@@ -9,7 +9,7 @@ namespace ScriptableObjectEditor
 		/// <summary>
 		/// Handles updating of asset types when assets are loaded
 		/// </summary>
-		public class ScriptableObjectPostprocessor : AssetPostprocessor
+		internal class ScriptableObjectPostprocessor : AssetPostprocessor
 		{
 			/// <summary>
 			/// Callback for when assets are updated

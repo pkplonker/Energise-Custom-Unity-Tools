@@ -1,12 +1,12 @@
 namespace ScriptableObjectEditor
 {
-	public class SelectionParams
+	internal class SelectionParams
 	{
-		public string instanceSearchString = string.Empty;
-		public bool includeDerivedTypes = true;
-		public string assetsFolderPath = "Assets";
-		public string typeSearchString = string.Empty;
-		public int selectedTypeIndex;
-		public int selectedAssemblyIndex;
+		internal string instanceSearchString = string.Empty;
+		internal bool includeDerivedTypes = true;
+		internal string assetsFolderPath = "Assets";
+		internal string typeSearchString = string.Empty;
+		internal int selectedTypeIndex;
+		internal int selectedAssemblyIndex;
 	}
 }

@@ -19,7 +19,6 @@ namespace ScriptableObjectEditor
 		internal static List<ScriptableObject> CurrentTypeObjectsOriginal = new();
 		internal static List<ScriptableObject> CurrentTypeObjects = new();
 
-
 		internal static void LoadObjectsOfType(Type type, SelectionParams selectionParams)
 		{
 			MemoryStats ??= new MemoryStats();
@@ -32,7 +31,7 @@ namespace ScriptableObjectEditor
 			if (type == null) return;
 
 			var all = new List<ScriptableObject>();
-			var guids = AssetDatabase.FindAssets("t:ScriptableObject", new[] { selectionParams.assetsFolderPath });
+			var guids = AssetDatabase.FindAssets("t:ScriptableObject", new[] {selectionParams.assetsFolderPath});
 			foreach (var guid in guids)
 			{
 				var path = AssetDatabase.GUIDToAssetPath(guid);

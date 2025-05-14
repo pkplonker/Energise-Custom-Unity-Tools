@@ -5,14 +5,14 @@ using UnityEngine;
 
 namespace ScriptableObjectEditor
 {
-	public class ColumnFilterPopup : PopupWindowContent
+	internal class ColumnFilterPopup : PopupWindowContent
 	{
 		private readonly int columnIndex;
-		private readonly ScriptableObjectEditorWindow owner;
+		private readonly ColumnManager owner;
 		private SearchField searchField;
 		private string filterText;
 
-		public ColumnFilterPopup(int columnIndex, ScriptableObjectEditorWindow owner)
+		internal ColumnFilterPopup(int columnIndex, ColumnManager owner)
 		{
 			this.columnIndex = columnIndex;
 			this.owner = owner;
@@ -24,7 +24,7 @@ namespace ScriptableObjectEditor
 
 		public override void OnGUI(Rect rect)
 		{
-			GUILayout.Label($"Filter “{owner.columns[columnIndex].label}”", EditorStyles.boldLabel);
+			GUILayout.Label($"Filter “{owner.Columns[columnIndex].Label}”", EditorStyles.boldLabel);
 
 			Rect sfRect = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.Height(18));
 			filterText = searchField.OnGUI(sfRect, filterText);
