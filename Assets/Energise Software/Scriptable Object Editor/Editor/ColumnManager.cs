@@ -7,36 +7,44 @@ using UnityEngine;
 
 namespace ScriptableObjectEditor
 {
+	/// <summary>
+	/// Manages the collection of columns: initialization, refresh (with saved prefs), filters, sorting, resizing, and reordering.
+	/// </summary>
 	internal class ColumnManager
 	{
 		public Rect[] LastHeaderCellRects { get; private set; }
 		public List<Column> Columns { get; private set; } = new();
-		private SearchField[] columnSearchFields;
 		public string[] columnFilterStrings;
+
+		private SearchField[] columnSearchFields;
 		private int reorderSourceColumn = -1;
 		private int draggingColumn = -1;
-		private int sortColumnIndex = -1;
-		private bool sortAscending = true;
 		private bool isReordering;
 		private float dragStartMouseX;
 		private float dragStartWidth;
-		public int CurrentDropIndex { get; private set; } = -1;
+		private int _currentDropIndex = -1;
+		private int sortColumnIndex = -1;
+		private bool sortAscending = true;
 
-		private List<Header> BuiltInHeaders = new()
+		public int CurrentDropIndex => _currentDropIndex;
+		public int ColumnCount => Columns.Count;
+		
+		/// <summary>
+		/// Sets up default built-in columns.
+		/// </summary>
+		public void InitializeColumns()
 		{
-			new Header("Copy", 35),
-			new Header("Delete", 50),
-			new Header("Instance Name", 150),
-		};
+			Columns.Clear();
+			Columns.AddRange(BuiltInColumnFactory.CreateDefaults());
+			EnsureColumnFiltersAndRects();
+		}
 
-		internal int ColumnCount => Columns?.Count ?? 0;
-
-		internal ColumnManager() { }
-
-		internal void EnsureColumnFiltersAndRects()
+		/// <summary>
+		/// Ensures filter fields and header rects arrays match current column count.
+		/// </summary>
+		public void EnsureColumnFiltersAndRects()
 		{
 			int count = Columns.Count;
-
 			if (columnSearchFields == null || columnSearchFields.Length != count)
 			{
 				columnSearchFields = new SearchField[count];
@@ -49,178 +57,63 @@ namespace ScriptableObjectEditor
 			}
 
 			if (LastHeaderCellRects == null || LastHeaderCellRects.Length != count)
-			{
 				LastHeaderCellRects = new Rect[count];
-			}
 		}
 
-		internal void InitializeColumns()
+		/// <summary>
+		/// Refreshes columns based on saved order & widths and provided property paths.
+		/// </summary>
+		public void Refresh(int selectedTypeIndex, List<string> propPaths)
 		{
-			Columns.Clear();
-			Columns.Add(new Column(Column.ColumnType.BuiltIn, "Copy", 35, null,
-				(obj, toAdd, toRemove, opts) =>
-				{
-					if (GUILayout.Button(EditorGUIUtility.IconContent("d_Toolbar Plus", "|Copy this scriptable object"),
-						    opts)) toAdd.Add(obj);
-				}));
-			Columns.Add(new Column(Column.ColumnType.BuiltIn, "Delete", 50, null,
-				(obj, toAdd, toRemove, opts) =>
-				{
-					if (GUILayout.Button(
-						    EditorGUIUtility.IconContent("d_TreeEditor.Trash", "|Delete this scriptable object"), opts))
-						toRemove.Add(obj);
-				}));
-			Columns.Add(new Column(Column.ColumnType.BuiltIn, "Instance Name", 150, null,
-				(obj, toAdd, toRemove, opts) =>
-				{
-					var path = AssetDatabase.GetAssetPath(obj);
-					var oldName = obj.name;
-					var newName = EditorGUILayout.TextField(oldName, opts);
-					if (newName != oldName)
-					{
-						AssetDatabase.RenameAsset(path, newName);
-						AssetDatabase.SaveAssets();
-						obj.name = newName;
-					}
-				}
-			));
-			EnsureColumnFiltersAndRects();
-		}
-
-		internal void Refresh(int selectedTypeIndex, List<string> propPaths)
-		{
-			var builtInTemplate = Columns.Where(c => c.ColType == Column.ColumnType.BuiltIn).ToList();
+			var builtInTemplate = BuiltInColumnFactory.CreateDefaults().ToList();
 			Columns.Clear();
 
-			var orderList =
-				SOEPrefs.LoadInterleavedColumnOrderForCurrentType(selectedTypeIndex, TypeHandler.ScriptableObjectTypes);
+			var orderList = SOEPrefs.LoadInterleavedColumnOrderForCurrentType(
+				selectedTypeIndex, TypeHandler.ScriptableObjectTypes);
+
 			if (orderList != null)
 			{
 				foreach (var entry in orderList)
 				{
 					if (entry.StartsWith("[H]"))
 					{
-						var label = entry.Substring(3);
-						var def = BuiltInHeaders.FirstOrDefault(h => h.Label == label);
-						if (def == null) continue;
-						var template = builtInTemplate.FirstOrDefault(t => t.Label == label);
-						var action = template != null
-							? template.DrawAction
-							: GetBuiltInDrawAction(label);
-						Columns.Add(new Column(Column.ColumnType.BuiltIn, label, def.Width, null, action));
+						string label = entry.Substring(3);
+						var def = builtInTemplate.FirstOrDefault(h => h.Label == label);
+						if (def != null) Columns.Add(def);
 					}
 					else
 					{
-						var path = entry.Substring(3);
-						var wi = Mathf.Max(100, path.Length * 10);
-						Columns.Add(new Column(Column.ColumnType.Property, path, wi, path));
+						string path = entry.Substring(3);
+						Columns.Add(CreatePropertyColumn(path));
 					}
 				}
 			}
 			else
 			{
-				foreach (var h in BuiltInHeaders)
-				{
-					var template = builtInTemplate.FirstOrDefault(t => t.Label == h.Label);
-					var action = template != null
-						? template.DrawAction
-						: GetBuiltInDrawAction(h.Label);
-					Columns.Add(new Column(Column.ColumnType.BuiltIn, h.Label, h.Width, null, action));
-				}
-
+				Columns.AddRange(builtInTemplate);
 				foreach (var path in propPaths)
-				{
-					Columns.Add(new Column(Column.ColumnType.Property, path, Mathf.Max(100, path.Length * 10), path));
-				}
+					Columns.Add(CreatePropertyColumn(path));
 			}
 
-			var allProps = propPaths.ToHashSet();
-			Columns.RemoveAll(c => c.ColType == Column.ColumnType.Property && !allProps.Contains(c.PropertyPath));
-
-			var existingProps = Columns.Where(c => c.ColType == Column.ColumnType.Property).Select(c => c.PropertyPath)
-				.ToHashSet();
-			foreach (var p in propPaths)
-			{
-				if (!existingProps.Contains(p))
-					Columns.Add(new Column(Column.ColumnType.Property, p, Mathf.Max(100, p.Length * 10), p));
-			}
-
-			var w = SOEPrefs.LoadColumnWidthsForCurrentType(selectedTypeIndex, TypeHandler.ScriptableObjectTypes);
-			if (w != null)
-				for (int i = 0; i < w.Count && i < Columns.Count; i++)
-					Columns[i].Width = w[i];
+			SyncPropertyColumns(propPaths);
+			ApplySavedWidths(selectedTypeIndex);
+			EnsureColumnFiltersAndRects();
 		}
 
-		private Action<ScriptableObject, List<ScriptableObject>, List<ScriptableObject>, GUILayoutOption[]>
-			GetBuiltInDrawAction(string label)
+		/// <summary>
+		/// Clears all filter strings.
+		/// </summary>
+		public void ClearFilterStrings()
 		{
-			switch (label)
-			{
-				case "Copy":
-					return (obj, toAdd, toRemove, opts) =>
-					{
-						if (GUILayout.Button(
-							    EditorGUIUtility.IconContent("d_Toolbar Plus", "|Copy this scriptable object"), opts))
-							toAdd.Add(obj);
-					};
-				case "Delete":
-					return (obj, toAdd, toRemove, opts) =>
-					{
-						if (GUILayout.Button(
-							    EditorGUIUtility.IconContent("d_TreeEditor.Trash", "|Delete this scriptable object"),
-							    opts))
-							toRemove.Add(obj);
-					};
-				default:
-					return (obj, toAdd, toRemove, opts) =>
-					{
-						EditorGUILayout.LabelField(obj.name, EditorStyles.textField, opts);
-					};
-			}
-		}
-
-		internal void ClearFilterStrings()
-		{
+			if (columnFilterStrings == null) return;
 			for (int i = 0; i < columnFilterStrings.Length; i++)
-			{
 				columnFilterStrings[i] = string.Empty;
-			}
 		}
 
-		private void ReorderColumn(int src, int dst, int selectedTypeIndex)
-		{
-			var col = Columns[src];
-			Columns.RemoveAt(src);
-			Columns.Insert(dst, col);
-			SaveColumns(selectedTypeIndex);
-		}
-
-		private void SaveColumns(int selectedTypeIndex)
-		{
-			SOEPrefs.SaveColumnWidthsForCurrentType(selectedTypeIndex, TypeHandler.ScriptableObjectTypes,
-				Columns.Select(c => c.Width).ToList());
-			SOEPrefs.SaveColumnOrderForCurrentType(
-				selectedTypeIndex,
-				TypeHandler.ScriptableObjectTypes,
-				Columns
-			);
-			LastHeaderCellRects = new Rect[Columns.Count];
-		}
-
-		private int GetColumnIndexAtPosition(float mouseX)
-		{
-			float x = 0;
-			for (int i = 0; i < Columns.Count; i++)
-			{
-				if (mouseX >= x && mouseX <= x + Columns[i].Width)
-					return i;
-				x += Columns[i].Width;
-			}
-
-			return -1;
-		}
-
-		internal void ApplyAllFilters()
+		/// <summary>
+		/// Applies all filters to the current object list.
+		/// </summary>
+		public void ApplyAllFilters()
 		{
 			var filtered = new List<ScriptableObject>();
 			foreach (var obj in TypeHandler.CurrentTypeObjectsOriginal)
@@ -228,13 +121,13 @@ namespace ScriptableObjectEditor
 				bool keep = true;
 				for (int i = 0; i < Columns.Count; i++)
 				{
-					var filter = columnFilterStrings[i];
+					string filter = columnFilterStrings[i];
 					if (string.IsNullOrEmpty(filter)) continue;
 
-					Column col = Columns[i];
+					var col = Columns[i];
 					string cellText = col.ColType == Column.ColumnType.BuiltIn && col.Label == "Instance Name"
 						? obj.name
-						: $"{TypeHandler.GetPropertyValue(obj, col.PropertyPath)}";
+						: TypeHandler.GetPropertyValue(obj, col.PropertyPath)?.ToString() ?? string.Empty;
 
 					if (!cellText.Contains(filter, StringComparison.OrdinalIgnoreCase))
 					{
@@ -249,72 +142,83 @@ namespace ScriptableObjectEditor
 			TypeHandler.CurrentTypeObjects = filtered;
 		}
 
-		internal void ApplySorting()
+		/// <summary>
+		/// Applies sorting on the active column.
+		/// </summary>
+		public void ApplySorting()
 		{
 			if (sortColumnIndex < 0 || sortColumnIndex >= ColumnCount) return;
 			var col = Columns[sortColumnIndex];
-			if (col.ColType == Column.ColumnType.BuiltIn)
+			if (col.ColType == Column.ColumnType.BuiltIn && col.Label == "Instance Name")
 			{
-				if (col.Label == "Instance Name")
-				{
-					TypeHandler.CurrentTypeObjects = sortAscending
-						? TypeHandler.CurrentTypeObjects.OrderBy(o => o.name).ToList()
-						: TypeHandler.CurrentTypeObjects.OrderByDescending(o => o.name).ToList();
-				}
+				TypeHandler.CurrentTypeObjects = sortAscending
+					? TypeHandler.CurrentTypeObjects.OrderBy(o => o.name).ToList()
+					: TypeHandler.CurrentTypeObjects.OrderByDescending(o => o.name).ToList();
 			}
 			else if (col.ColType == Column.ColumnType.Property)
 			{
 				string path = col.PropertyPath;
-				var first = new SerializedObject(TypeHandler.CurrentTypeObjects[0]);
-				var prop = first.FindProperty(path);
-				bool isColor = prop != null && prop.propertyType == SerializedPropertyType.Color;
-				if (isColor)
+				var first = TypeHandler.CurrentTypeObjects.FirstOrDefault();
+				if (first != null)
 				{
-					TypeHandler.CurrentTypeObjects = sortAscending
-						? TypeHandler.CurrentTypeObjects.OrderBy(o =>
+					var so = new SerializedObject(first);
+					var prop = so.FindProperty(path);
+					bool isColor = prop != null && prop.propertyType == SerializedPropertyType.Color;
+
+					if (isColor)
+					{
+						Func<ScriptableObject, float> key = o =>
 						{
 							var c = new SerializedObject(o).FindProperty(path).colorValue;
 							return c.r + c.g + c.b + c.a;
-						}).ToList()
-						: TypeHandler.CurrentTypeObjects.OrderByDescending(o =>
-						{
-							var c = new SerializedObject(o).FindProperty(path).colorValue;
-							return c.r + c.g + c.b + c.a;
-						}).ToList();
-				}
-				else
-				{
-					TypeHandler.CurrentTypeObjects = sortAscending
-						? TypeHandler.CurrentTypeObjects.OrderBy(o => TypeHandler.GetPropertyValue(o, path)).ToList()
-						: TypeHandler.CurrentTypeObjects.OrderByDescending(o => TypeHandler.GetPropertyValue(o, path))
-							.ToList();
+						};
+						TypeHandler.CurrentTypeObjects = sortAscending
+							? TypeHandler.CurrentTypeObjects.OrderBy(key).ToList()
+							: TypeHandler.CurrentTypeObjects.OrderByDescending(key).ToList();
+					}
+					else
+					{
+						Func<ScriptableObject, object> key = o => TypeHandler.GetPropertyValue(o, path);
+						TypeHandler.CurrentTypeObjects = sortAscending
+							? TypeHandler.CurrentTypeObjects.OrderBy(key).ToList()
+							: TypeHandler.CurrentTypeObjects.OrderByDescending(key).ToList();
+					}
 				}
 			}
 		}
 
-		internal void HandleColumnInput(
+		/// <summary>
+		/// Returns drop index during drag-reorder.
+		/// </summary>
+		public int GetDropIndex()
+		{
+			var e = Event.current;
+			return (isReordering && e.rawType == EventType.Repaint)
+				? GetColumnIndexAt(e.mousePosition.x)
+				: -1;
+		}
+
+		/// <summary>
+		/// Handles resize/reorder mouse events for a header cell.
+		/// </summary>
+		public void HandleColumnInput(
 			int selectedTypeIndex,
 			int columnIndex,
 			Rect cellRect,
-			Action repaintCallback
-		)
+			Action repaintCallback)
 		{
 			const float hotWidth = 12f;
-			Rect resizeHandle = new Rect(
+			Rect resizeHandle = new(
 				cellRect.xMax - hotWidth,
 				cellRect.y,
 				hotWidth,
-				cellRect.height
-			);
+				cellRect.height);
 			EditorGUIUtility.AddCursorRect(resizeHandle, MouseCursor.ResizeHorizontal);
 
 			float lineX = cellRect.xMax - 0.5f;
 			Handles.BeginGUI();
 			Handles.color = new Color(0, 0, 0, 0.2f);
-			Handles.DrawLine(
-				new Vector3(lineX, cellRect.y + 4f),
-				new Vector3(lineX, cellRect.yMax - 4f)
-			);
+			Handles.DrawLine(new Vector3(lineX, cellRect.y + 4f), new Vector3(lineX, cellRect.yMax - 4f));
 			Handles.EndGUI();
 
 			int id = GUIUtility.GetControlID(FocusType.Passive, resizeHandle);
@@ -333,6 +237,14 @@ namespace ScriptableObjectEditor
 						return;
 					}
 
+					if (cellRect.Contains(e.mousePosition))
+					{
+						reorderSourceColumn = columnIndex;
+						dragStartMouseX = e.mousePosition.x;
+						isReordering = false;
+						e.Use();
+					}
+
 					break;
 
 				case EventType.MouseDrag:
@@ -343,6 +255,19 @@ namespace ScriptableObjectEditor
 						repaintCallback();
 						e.Use();
 						return;
+					}
+
+					if (reorderSourceColumn == columnIndex)
+					{
+						if (!isReordering && Mathf.Abs(e.mousePosition.x - dragStartMouseX) > 5f)
+							isReordering = true;
+						if (isReordering)
+						{
+							_currentDropIndex = GetColumnIndexAt(e.mousePosition.x);
+							repaintCallback();
+						}
+
+						e.Use();
 					}
 
 					break;
@@ -358,62 +283,94 @@ namespace ScriptableObjectEditor
 						return;
 					}
 
+					if (isReordering && reorderSourceColumn == columnIndex)
+					{
+						if (_currentDropIndex >= 0 && _currentDropIndex != reorderSourceColumn)
+							ReorderColumn(reorderSourceColumn, _currentDropIndex, selectedTypeIndex);
+						isReordering = false;
+						reorderSourceColumn = -1;
+						_currentDropIndex = -1;
+						repaintCallback();
+						e.Use();
+					}
+
 					break;
-			}
-
-			if (e.type == EventType.MouseDown && cellRect.Contains(e.mousePosition) &&
-			    !resizeHandle.Contains(e.mousePosition))
-			{
-				reorderSourceColumn = columnIndex;
-				dragStartMouseX = e.mousePosition.x;
-				isReordering = false;
-				e.Use();
-			}
-
-			if (e.type == EventType.MouseDrag && reorderSourceColumn == columnIndex)
-			{
-				if (!isReordering && Mathf.Abs(e.mousePosition.x - dragStartMouseX) > 5f)
-					isReordering = true;
-
-				if (isReordering)
-				{
-					CurrentDropIndex = GetColumnIndexAtPosition(e.mousePosition.x);
-					repaintCallback();
-				}
-
-				e.Use();
-			}
-
-			if (e.type == EventType.MouseUp && isReordering && reorderSourceColumn == columnIndex)
-			{
-				int target = CurrentDropIndex;
-				if (target >= 0 && target != reorderSourceColumn)
-				{
-					ReorderColumn(reorderSourceColumn, target, selectedTypeIndex);
-				}
-
-				isReordering = false;
-				reorderSourceColumn = -1;
-				CurrentDropIndex = -1;
-				repaintCallback();
-				e.Use();
 			}
 
 			LastHeaderCellRects[columnIndex] = cellRect;
 		}
 
-		internal int GetDropIndex()
+		/// <summary>
+		/// Returns a label with sort indicator.
+		/// </summary>
+		public string GetSortedLabel(int index)
+			=> Columns[index].Label + (sortColumnIndex == index ? (sortAscending ? " ▲" : " ▼") : "");
+		
+		private Column CreatePropertyColumn(string path)
+			=> new(
+				Column.ColumnType.Property,
+				path,
+				Mathf.Max(100, path.Length * 10),
+				path,
+				(obj, toAdd, toRemove, opts) =>
+				{
+					EditorGUILayout.LabelField(
+						TypeHandler.GetPropertyValue(obj, path)?.ToString() ?? string.Empty,
+						opts);
+				});
+
+		private void SyncPropertyColumns(IEnumerable<string> props)
 		{
-			var e = Event.current;
-			if (isReordering && e.rawType == EventType.Repaint)
+			var propSet = new HashSet<string>(props);
+			Columns.RemoveAll(c => c.ColType == Column.ColumnType.Property && !propSet.Contains(c.PropertyPath));
+			var exist = new HashSet<string>(Columns
+				.Where(c => c.ColType == Column.ColumnType.Property)
+				.Select(c => c.PropertyPath));
+			foreach (var p in props)
+				if (!exist.Contains(p))
+					Columns.Add(CreatePropertyColumn(p));
+		}
+
+		private void ApplySavedWidths(int selectedTypeIndex)
+		{
+			var w = SOEPrefs.LoadColumnWidthsForCurrentType(
+				selectedTypeIndex, TypeHandler.ScriptableObjectTypes);
+			if (w == null) return;
+			for (int i = 0; i < w.Count && i < Columns.Count; i++)
+				Columns[i].Width = w[i];
+		}
+
+		private void ReorderColumn(int src, int dst, int selectedTypeIndex)
+		{
+			var col = Columns[src];
+			Columns.RemoveAt(src);
+			Columns.Insert(dst, col);
+			SaveColumns(selectedTypeIndex);
+		}
+
+		private void SaveColumns(int selectedTypeIndex)
+		{
+			SOEPrefs.SaveColumnWidthsForCurrentType(
+				selectedTypeIndex,
+				TypeHandler.ScriptableObjectTypes,
+				Columns.Select(c => c.Width).ToList());
+			SOEPrefs.SaveColumnOrderForCurrentType(
+				selectedTypeIndex,
+				TypeHandler.ScriptableObjectTypes,
+				Columns);
+			LastHeaderCellRects = new Rect[Columns.Count];
+		}
+
+		private int GetColumnIndexAt(float mouseX)
+		{
+			float x = 0;
+			for (int i = 0; i < Columns.Count; i++)
 			{
-				return GetColumnIndexAtPosition(e.mousePosition.x);
+				if (mouseX >= x && mouseX <= x + Columns[i].Width) return i;
+				x += Columns[i].Width;
 			}
 
 			return -1;
 		}
-
-		internal string GetSortedLabel(int index) =>
-			Columns[index].Label + (sortColumnIndex == index ? (sortAscending ? " ▲" : " ▼") : "");
 	}
 }
