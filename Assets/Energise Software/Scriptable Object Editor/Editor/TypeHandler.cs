@@ -24,7 +24,6 @@ namespace ScriptableObjectEditor
 			MemoryStats ??= new MemoryStats();
 			MemoryStats.memoryUsage.Clear();
 			MemoryStats.totalMemoryAll = 0;
-			MemoryStats.totalMemoryFiltered = 0;
 			CurrentTypeObjects.Clear();
 			CurrentTypeObjectsOriginal.Clear();
 
@@ -58,9 +57,6 @@ namespace ScriptableObjectEditor
 				: all.Where(o =>
 					o.name.IndexOf(selectionParams.instanceSearchString, StringComparison.OrdinalIgnoreCase) >= 0
 				).ToList();
-
-			foreach (var obj in CurrentTypeObjects)
-				MemoryStats.totalMemoryFiltered += MemoryStats.memoryUsage[obj];
 		}
 
 		internal static void LoadAvailableAssemblies(SelectionParams selectionParams)

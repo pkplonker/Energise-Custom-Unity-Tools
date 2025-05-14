@@ -184,8 +184,6 @@ namespace ScriptableObjectEditor
 				GUILayout.Label($"Count: {TypeHandler.CurrentTypeObjects.Count}", GUILayout.Width(100));
 				GUILayout.Label($"Total Memory: {TypeHandler.MemoryStats.totalMemoryAll / 1024f:F1} KB",
 					GUILayout.Width(140));
-				GUILayout.Label($"Filtered Memory: {TypeHandler.MemoryStats.totalMemoryFiltered / 1024f:F1} KB",
-					GUILayout.Width(160));
 			}
 		}
 
