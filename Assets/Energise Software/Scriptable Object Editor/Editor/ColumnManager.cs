@@ -30,7 +30,7 @@ namespace ScriptableObjectEditor
 		public int ColumnCount => Columns.Count;
 
 		/// <summary>
-		/// Sets up default built-in columns.
+		/// Sets up the default built-in columns and prepares filter fields and header rects.
 		/// </summary>
 		public void InitializeColumns()
 		{
@@ -40,7 +40,7 @@ namespace ScriptableObjectEditor
 		}
 
 		/// <summary>
-		/// Ensures filter fields and header rects arrays match current column count.
+		/// Ensures that the filter search fields and header rectangle arrays match the current column count.
 		/// </summary>
 		public void EnsureColumnFiltersAndRects()
 		{
@@ -61,8 +61,10 @@ namespace ScriptableObjectEditor
 		}
 
 		/// <summary>
-		/// Refreshes columns based on saved order & widths and provided property paths.
+		/// Builds the column list based on saved order and widths, then incorporates the provided property paths.
 		/// </summary>
+		/// <param name="selectedTypeIndex">Index of the current ScriptableObject type.</param>
+		/// <param name="propPaths">List of serialized property paths to include as columns.</param>
 		public void Refresh(int selectedTypeIndex, List<string> propPaths)
 		{
 			var builtInTemplate = BuiltInColumnFactory.CreateDefaults().ToList();
@@ -101,7 +103,7 @@ namespace ScriptableObjectEditor
 		}
 
 		/// <summary>
-		/// Clears all filter strings.
+		/// Clears all per-column filter strings back to empty.
 		/// </summary>
 		public void ClearFilterStrings()
 		{
@@ -109,9 +111,9 @@ namespace ScriptableObjectEditor
 			for (int i = 0; i < columnFilterStrings.Length; i++)
 				columnFilterStrings[i] = string.Empty;
 		}
-
+		
 		/// <summary>
-		/// Applies all filters to the current object list.
+		/// Filters the current object list by applying each column’s filter string.
 		/// </summary>
 		public void ApplyAllFilters()
 		{
@@ -143,7 +145,7 @@ namespace ScriptableObjectEditor
 		}
 
 		/// <summary>
-		/// Applies sorting on the active column.
+		/// Sorts the current object list according to the active sort column and direction.
 		/// </summary>
 		public void ApplySorting()
 		{
@@ -188,8 +190,9 @@ namespace ScriptableObjectEditor
 		}
 
 		/// <summary>
-		/// Returns drop index during drag-reorder.
+		/// Returns the index of the column currently under a drag-reorder operation (or –1 if none).
 		/// </summary>
+		/// <returns>Current drop target column index, or –1.</returns>
 		public int GetDropIndex()
 		{
 			var e = Event.current;
@@ -199,8 +202,12 @@ namespace ScriptableObjectEditor
 		}
 
 		/// <summary>
-		/// Handles resize/reorder mouse events for a header cell.
+		/// Handles mouse input for resizing or reordering a header cell, and triggers persistence on change.
 		/// </summary>
+		/// <param name="selectedTypeIndex">Index of the current ScriptableObject type.</param>
+		/// <param name="columnIndex">Index of the column being interacted with.</param>
+		/// <param name="cellRect">Screen rectangle of the header cell.</param>
+		/// <param name="repaintCallback">Callback to request window repaint.</param>
 		public void HandleColumnInput(
 			int selectedTypeIndex,
 			int columnIndex,
@@ -301,11 +308,18 @@ namespace ScriptableObjectEditor
 		}
 
 		/// <summary>
-		/// Returns a label with sort indicator.
+		/// Returns the column label augmented with a sort indicator arrow if it is the active sort column.
 		/// </summary>
+		/// <param name="index">Index of the column.</param>
+		/// <returns>Label text plus icon if sorted, otherwise just the label.</returns>
 		public string GetSortedLabel(int index)
 			=> Columns[index].Label + (sortColumnIndex == index ? (sortAscending ? " ▲" : " ▼") : "");
 
+		/// <summary>
+		/// Creates a new property-type column for the given serialized property path.
+		/// </summary>
+		/// <param name="path">Serialized property path to display.</param>
+		/// <returns>A configured property column instance.</returns>
 		private Column CreatePropertyColumn(string path)
 			=> new(
 				Column.ColumnType.Property,
@@ -319,6 +333,10 @@ namespace ScriptableObjectEditor
 						opts);
 				});
 
+		/// <summary>
+		/// Synchronizes the set of property columns to exactly match the supplied property paths.
+		/// </summary>
+		/// <param name="props">Enumerable of property paths that should remain as columns.</param>
 		private void SyncPropertyColumns(IEnumerable<string> props)
 		{
 			var propSet = new HashSet<string>(props);
@@ -331,6 +349,10 @@ namespace ScriptableObjectEditor
 					Columns.Add(CreatePropertyColumn(p));
 		}
 
+		/// <summary>
+		/// Loads and applies saved column width values for the current ScriptableObject type.
+		/// </summary>
+		/// <param name="selectedTypeIndex">Index of the current ScriptableObject type.</param>
 		private void ApplySavedWidths(int selectedTypeIndex)
 		{
 			var w = SOEPrefs.LoadColumnWidthsForCurrentType(
@@ -340,6 +362,12 @@ namespace ScriptableObjectEditor
 				Columns[i].Width = w[i];
 		}
 
+		/// <summary>
+		/// Moves a column from the source index to the destination index and saves the new order.
+		/// </summary>
+		/// <param name="src">Original column index.</param>
+		/// <param name="dst">New target column index.</param>
+		/// <param name="selectedTypeIndex">Index of the current ScriptableObject type.</param>
 		private void ReorderColumn(int src, int dst, int selectedTypeIndex)
 		{
 			var col = Columns[src];
@@ -348,6 +376,10 @@ namespace ScriptableObjectEditor
 			SaveColumns(selectedTypeIndex);
 		}
 
+		/// <summary>
+		/// Persists the current column widths and order for the current ScriptableObject type.
+		/// </summary>
+		/// <param name="selectedTypeIndex">Index of the current ScriptableObject type.</param>
 		private void SaveColumns(int selectedTypeIndex)
 		{
 			SOEPrefs.SaveColumnWidthsForCurrentType(
@@ -361,6 +393,11 @@ namespace ScriptableObjectEditor
 			LastHeaderCellRects = new Rect[Columns.Count];
 		}
 
+		/// <summary>
+		/// Determines which column index lies at the given horizontal mouse position.
+		/// </summary>
+		/// <param name="mouseX">X-coordinate of the mouse in header space.</param>
+		/// <returns>Column index under the position, or –1 if none.</returns>
 		private int GetColumnIndexAt(float mouseX)
 		{
 			float x = 0;

@@ -9,6 +9,9 @@ namespace ScriptableObjectEditor
 	/// </summary>
 	internal static class BuiltInColumnFactory
 	{
+		/// <summary>
+		/// Returns the default set of built-in columns: Copy, Delete, and Instance Name.
+		/// </summary>
 		public static IEnumerable<Column> CreateDefaults()
 		{
 			yield return CreateCopy();
@@ -16,6 +19,9 @@ namespace ScriptableObjectEditor
 			yield return CreateInstanceName();
 		}
 
+		/// <summary>
+		/// Creates the “Copy” built-in column which duplicates a ScriptableObject when clicked.
+		/// </summary>
 		private static Column CreateCopy() => new(
 			Column.ColumnType.BuiltIn, "Copy", 65f, null,
 			(obj, toAdd, toRemove, opts) =>
@@ -25,6 +31,9 @@ namespace ScriptableObjectEditor
 					toAdd.Add(obj);
 			});
 
+		/// <summary>
+		/// Creates the “Delete” built-in column which removes a ScriptableObject when clicked.
+		/// </summary>
 		private static Column CreateDelete() => new(
 			Column.ColumnType.BuiltIn, "Delete", 80f, null,
 			(obj, toAdd, toRemove, opts) =>
@@ -34,6 +43,9 @@ namespace ScriptableObjectEditor
 					toRemove.Add(obj);
 			});
 
+		/// <summary>
+		/// Creates the “Instance Name” built-in column which displays and allows renaming of the asset.
+		/// </summary>
 		private static Column CreateInstanceName() => new(
 			Column.ColumnType.BuiltIn, "Instance Name", 150f, null,
 			(obj, toAdd, toRemove, opts) =>

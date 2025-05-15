@@ -5,8 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="89339a32-08e6-4032-8db2-a389fee13585" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.EnergiseCustomTooling/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.EnergiseCustomTooling/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/Editor/BuiltInColumnFactory.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/Editor/BuiltInColumnFactory.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/Editor/ColumnManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/Editor/ColumnManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/Editor/ScriptableObjectEditor.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/Editor/ScriptableObjectEditor.cs" afterDir="false" />
     </list>
@@ -121,7 +119,7 @@
       <updated>1746224202112</updated>
       <workItem from="1746224202818" duration="3148000" />
       <workItem from="1746822908001" duration="27695000" />
-      <workItem from="1747342964630" duration="1937000" />
+      <workItem from="1747342964630" duration="2238000" />
     </task>
     <servers />
   </component>

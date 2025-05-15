@@ -8,12 +8,26 @@ namespace ScriptableObjectEditor
 {
 	internal static class SOEPrefs
 	{
+		/// <summary>
+		/// Builds the EditorPrefs key for storing column widths of the given ScriptableObject type.
+		/// </summary>
+		/// <param name="t">The ScriptableObject type.</param>
+		/// <returns>Prefs key string.</returns>
 		private static string GetPrefsKeyForType(Type t) => $"SOEditor_ColumnWidths_{t.AssemblyQualifiedName}";
+
+		/// <summary>
+		/// Builds the EditorPrefs key for storing column order of the given ScriptableObject type.
+		/// </summary>
+		/// <param name="t">The ScriptableObject type.</param>
+		/// <returns>Prefs key string.</returns>
 		private static string GetOrderKeyForType(Type t) => $"SOEditor_ColumnOrder_{t.AssemblyQualifiedName}";
 
 		/// <summary>
-		/// Persist the column widths for this SO type.
+		/// Persists the column widths for the currently selected ScriptableObject type.
 		/// </summary>
+		/// <param name="selectedTypeIndex">Index of the selected type in the type list.</param>
+		/// <param name="scriptableObjectTypes">List of available ScriptableObject types.</param>
+		/// <param name="columnWidths">List of column width values to save.</param>
 		internal static void SaveColumnWidthsForCurrentType(int selectedTypeIndex, List<Type> scriptableObjectTypes,
 			List<float> columnWidths)
 		{
@@ -24,8 +38,11 @@ namespace ScriptableObjectEditor
 		}
 
 		/// <summary>
-		/// Load the column widths for this SO type, or null if none saved.
+		/// Loads the saved column widths for the currently selected ScriptableObject type, or returns null if none exist.
 		/// </summary>
+		/// <param name="selectedTypeIndex">Index of the selected type in the type list.</param>
+		/// <param name="scriptableObjectTypes">List of available ScriptableObject types.</param>
+		/// <returns>List of saved column widths, or null.</returns>
 		internal static List<float> LoadColumnWidthsForCurrentType(int selectedTypeIndex,
 			List<Type> scriptableObjectTypes)
 		{
@@ -44,9 +61,11 @@ namespace ScriptableObjectEditor
 		}
 
 		/// <summary>
-		/// Returns the saved interleaved “[H]…”/“[P]…” column order for the given SO type,
-		/// or null if nothing has been saved yet.
+		/// Loads the saved interleaved column order (headers and properties) for the currently selected ScriptableObject type.
 		/// </summary>
+		/// <param name="selectedTypeIndex">Index of the selected type in the type list.</param>
+		/// <param name="scriptableObjectTypes">List of available ScriptableObject types.</param>
+		/// <returns>List of order entries (with “[H]”/“[P]” prefixes), or null if none saved.</returns>
 		internal static List<string> LoadInterleavedColumnOrderForCurrentType(int selectedTypeIndex,
 			List<Type> scriptableObjectTypes)
 		{
@@ -61,8 +80,11 @@ namespace ScriptableObjectEditor
 		}
 
 		/// <summary>
-		/// Persist the column order (default headers + property paths) for this SO type.
+		/// Persists the interleaved column order (headers and property paths) for the currently selected ScriptableObject type.
 		/// </summary>
+		/// <param name="selectedTypeIndex">Index of the selected type in the type list.</param>
+		/// <param name="scriptableObjectTypes">List of available ScriptableObject types.</param>
+		/// <param name="columns">List of Column objects defining current order.</param>
 		internal static void SaveColumnOrderForCurrentType(int selectedTypeIndex, List<Type> scriptableObjectTypes,
 			List<Column> columns)
 		{
@@ -80,6 +102,12 @@ namespace ScriptableObjectEditor
 			EditorPrefs.SetString(key, json);
 		}
 
+		/// <summary>
+		/// Saves a generic preference value (int, float, bool, string, enum, or serializable) under the given key.
+		/// </summary>
+		/// <typeparam name="T">Type of the preference value.</typeparam>
+		/// <param name="tabChoiceKey">Base key name for the preference.</param>
+		/// <param name="tabChoice">Value to save.</param>
 		internal static void Save<T>(string tabChoiceKey, T tabChoice)
 		{
 			string prefsKey = $"SOEditor_{tabChoiceKey}";
@@ -112,6 +140,13 @@ namespace ScriptableObjectEditor
 			}
 		}
 
+		/// <summary>
+		/// Loads a generic preference value (int, float, bool, string, enum, or serializable) from the given key, or returns a default.
+		/// </summary>
+		/// <typeparam name="T">Type of the preference value.</typeparam>
+		/// <param name="tabChoiceKey">Base key name for the preference.</param>
+		/// <param name="defaultValue">Value to return if no preference exists.</param>
+		/// <returns>Loaded preference value or default.</returns>
 		internal static T Load<T>(string tabChoiceKey, T defaultValue = default)
 		{
 			string prefsKey = $"SOEditor_{tabChoiceKey}";

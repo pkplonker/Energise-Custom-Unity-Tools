@@ -12,6 +12,11 @@ namespace ScriptableObjectEditor
 		private SearchField searchField;
 		private string filterText;
 
+		/// <summary>
+		/// Initializes a filter popup for the specified column on the given ColumnManager.
+		/// </summary>
+		/// <param name="columnIndex">Index of the column to filter.</param>
+		/// <param name="owner">The ColumnManager instance that owns this popup.</param>
 		internal ColumnFilterPopup(int columnIndex, ColumnManager owner)
 		{
 			this.columnIndex = columnIndex;
@@ -20,8 +25,16 @@ namespace ScriptableObjectEditor
 			filterText = owner.columnFilterStrings[columnIndex];
 		}
 
+		/// <summary>
+		/// Returns the fixed size of this filter popup window.
+		/// </summary>
+		/// <returns>The width and height of the popup.</returns>
 		public override Vector2 GetWindowSize() => new Vector2(200, 60);
 
+		/// <summary>
+		/// Draws the popup’s GUI: the label, search field, and Apply/Clear buttons.
+		/// </summary>
+		/// <param name="rect">The rectangle area of the popup window.</param>
 		public override void OnGUI(Rect rect)
 		{
 			GUILayout.Label($"Filter “{owner.Columns[columnIndex].Label}”", EditorStyles.boldLabel);
@@ -47,6 +60,9 @@ namespace ScriptableObjectEditor
 			EditorGUILayout.EndHorizontal();
 		}
 
+		/// <summary>
+		/// Commits the current filter text back to the ColumnManager and applies filtering.
+		/// </summary>
 		private void Commit()
 		{
 			owner.columnFilterStrings[columnIndex] = filterText;

@@ -29,6 +29,9 @@ namespace ScriptableObjectEditor
 
 		private ColumnManager columnManager = new();
 
+		/// <summary>
+		/// Opens the Scriptable Object Editor window.
+		/// </summary>
 		[MenuItem("Window/Energise Tools/Scriptable Object Editor &%S")]
 		public static void ShowWindow() => GetWindow<ScriptableObjectEditorWindow>("Scriptable Object Editor");
 
@@ -44,6 +47,9 @@ namespace ScriptableObjectEditor
 			window.Repaint();
 		}
 
+		/// <summary>
+		/// Initialises the editor window: sets up columns, tabs, and loads the initial type list.
+		/// </summary>
 		private void Initalise()
 		{
 			columnManager.InitializeColumns();
@@ -74,18 +80,18 @@ namespace ScriptableObjectEditor
 			}
 		}
 
+		/// <summary>
+		/// Called when the window is enabled; triggers initialization logic.
+		/// </summary>
 		private void OnEnable()
 		{
 			Initalise();
 		}
-
-		private bool GetExpandedRegion(string key)
-		{
-			if (regions.ContainsKey(key)) return regions[key];
-			regions.Add(key, false);
-			return false;
-		}
-
+		
+		/// <summary>
+		/// Loads all ScriptableObjects of the specified type, sets up property columns, and applies sorting.
+		/// </summary>
+		/// <param name="type">The ScriptableObject type to display.</param>
 		private void RefreshObjectsOfType(Type type)
 		{
 			TypeHandler.LoadObjectsOfType(type, selectionParams);
@@ -102,6 +108,9 @@ namespace ScriptableObjectEditor
 			columnManager.ApplySorting();
 		}
 
+		/// <summary>
+		/// Main IMGUI loop: draws the toolbar, column headers, and the scrollable grid of objects.
+		/// </summary>
 		private void OnGUI()
 		{
 			using (new SOERegion(true))
@@ -155,9 +164,7 @@ namespace ScriptableObjectEditor
 					}
 				}
 			}
-
-			int dropIndex = columnManager.GetDropIndex();
-
+			
 			EditorGUILayout.Space();
 			int colCount = columnManager.ColumnCount;
 			float sumWidths = columnManager.Columns.Sum(c => c.Width);
@@ -189,6 +196,9 @@ namespace ScriptableObjectEditor
 			EditorGUILayout.EndScrollView();
 		}
 
+		/// <summary>
+		/// Draws statistics (count and memory usage)
+		/// </summary>
 		private static void DrawStats()
 		{
 			using (new EditorGUILayout.VerticalScope())
@@ -199,6 +209,9 @@ namespace ScriptableObjectEditor
 			}
 		}
 
+		/// <summary>
+		/// Renders the Asset Management tab, allowing folder selection, assembly refresh, and type filtering.
+		/// </summary>
 		private void DrawAssetManagement()
 		{
 			using (new EditorGUILayout.VerticalScope())
@@ -290,14 +303,17 @@ namespace ScriptableObjectEditor
 			}
 		}
 
+		/// <summary>
+		/// Draws the header row for all columns, including drag-and-drop indicators.
+		/// </summary>
+		/// <param name="totalCols">Total number of columns to draw.</param>
+		/// <param name="dropIndex">Current target index for column reordering.</param>
 		private void DrawHeaders(int totalCols, int dropIndex)
 		{
-			// Compute total content width (columns + paddings)
 			float totalColumnWidth = columnManager.Columns.Sum(c => c.Width);
 			float totalPadding = Mathf.Max(0, totalCols - 1) * cellPadding;
 			float contentWidth = totalColumnWidth + totalPadding;
 
-			// Begin a fixed-width container so headers never shrink below contentWidth
 			GUILayout.BeginHorizontal(GUILayout.Width(contentWidth));
 			{
 				for (int i = 0; i < totalCols; i++)
@@ -316,6 +332,10 @@ namespace ScriptableObjectEditor
 			GUILayout.EndHorizontal();
 		}
 
+		/// <summary>
+		/// Draws a single column header cell, including the label, filter icon, and input handling for resize/reorder.
+		/// </summary>
+		/// <param name="columnIndex">Index of the column to draw.</param>
 		private void DrawHeaderCell(int columnIndex)
 		{
 			columnManager.EnsureColumnFiltersAndRects();
@@ -340,9 +360,17 @@ namespace ScriptableObjectEditor
 			);
 		}
 
+		/// <summary>
+		/// Shows the filter pop-up for the specified column at the given trigger rectangle.
+		/// </summary>
+		/// <param name="columnIndex">Index of the column to filter.</param>
+		/// <param name="triggerRect">Screen rectangle that triggered the pop-up.</param>
 		private void ShowFilterPopup(int columnIndex, Rect triggerRect) =>
 			PopupWindow.Show(triggerRect, new ColumnFilterPopup(columnIndex, columnManager));
 
+		/// <summary>
+		/// Draws the grid of property fields and built-in action buttons for each ScriptableObject row.
+		/// </summary>
 		private void DrawPropertiesGrid()
 		{
 			var toAdd = new List<ScriptableObject>();
@@ -502,6 +530,11 @@ namespace ScriptableObjectEditor
 			SOEIO.RemoveAssets(toRemove);
 		}
 
+		/// <summary>
+		/// Recursively collects all visible property paths from a SerializedProperty iterator.
+		/// </summary>
+		/// <param name="iter">Iterator positioned before the first property.</param>
+		/// <returns>List of property paths in display order.</returns>
 		private static List<string> GetPropertyPaths(SerializedProperty iter)
 		{
 			var paths = new List<string>();

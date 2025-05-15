@@ -19,6 +19,11 @@ namespace ScriptableObjectEditor
 		internal static List<ScriptableObject> CurrentTypeObjectsOriginal = new();
 		internal static List<ScriptableObject> CurrentTypeObjects = new();
 
+		/// <summary>
+		/// Loads all ScriptableObject assets of the specified type from the selected folder, tracks memory usage, and applies any name-based filtering.
+		/// </summary>
+		/// <param name="type">The ScriptableObject type to load.</param>
+		/// <param name="selectionParams">Selection parameters (folder path, include derived, name filter).</param>
 		internal static void LoadObjectsOfType(Type type, SelectionParams selectionParams)
 		{
 			MemoryStats ??= new MemoryStats();
@@ -59,6 +64,10 @@ namespace ScriptableObjectEditor
 				).ToList();
 		}
 
+		/// <summary>
+		/// Populates the list of available assemblies that contain ScriptableObject types in the selected folder.
+		/// </summary>
+		/// <param name="selectionParams">Selection parameters including the assets folder path.</param>
 		internal static void LoadAvailableAssemblies(SelectionParams selectionParams)
 		{
 			AvailableAssemblies = GetAssembliesWithScriptableObjects(selectionParams);
@@ -68,6 +77,10 @@ namespace ScriptableObjectEditor
 				.ToArray();
 		}
 
+		/// <summary>
+		/// Builds the list of ScriptableObject types from the available assemblies, applying name filtering and include-derived settings.
+		/// </summary>
+		/// <param name="selectionParams">Selection parameters including assembly index, type name filter, and include-derived flag.</param>
 		internal static void LoadScriptableObjectTypes(SelectionParams selectionParams)
 		{
 			IEnumerable<Type> types = selectionParams.selectedAssemblyIndex == 0
@@ -92,6 +105,12 @@ namespace ScriptableObjectEditor
 			selectionParams.selectedTypeIndex = Mathf.Clamp(selectionParams.selectedTypeIndex, 0, TypeNames.Length - 1);
 		}
 
+		/// <summary>
+		/// Retrieves a comparable value from a serialized property on a ScriptableObject for sorting purposes.
+		/// </summary>
+		/// <param name="o">The ScriptableObject instance.</param>
+		/// <param name="path">The serialized property path.</param>
+		/// <returns>An IComparable representing the property’s value.</returns>
 		internal static IComparable GetPropertyValue(ScriptableObject o, string path)
 		{
 			var so = new SerializedObject(o);
@@ -109,6 +128,13 @@ namespace ScriptableObjectEditor
 			}
 		}
 
+		/// <summary>
+		/// Prompts the user for a save location and creates one or more new instances of the specified ScriptableObject type as assets.
+		/// </summary>
+		/// <param name="count">Number of instances to create.</param>
+		/// <param name="type">The ScriptableObject type.</param>
+		/// <param name="defaultFolder">Default folder path for asset creation.</param>
+		/// <param name="selectedTypeIndex">Index of the type in the type list (for validation).</param>
 		internal static void CreateNewInstance(int count, Type type, string defaultFolder, int selectedTypeIndex)
 		{
 			if (selectedTypeIndex < 0 || selectedTypeIndex >= ScriptableObjectTypes.Count) return;
@@ -142,15 +168,30 @@ namespace ScriptableObjectEditor
 			AssetDatabase.SaveAssets();
 		}
 
+		/// <summary>
+		/// Loads assembly and type lists based on the provided selection parameters.
+		/// </summary>
+		/// <param name="selectionParams">Selection parameters including folder and assembly settings.</param>
 		internal static void Load(SelectionParams selectionParams)
 		{
 			LoadAvailableAssemblies(selectionParams);
 			LoadScriptableObjectTypes(selectionParams);
 		}
 
+		/// <summary>
+		/// Determines whether the given ScriptableObject type has any assets in the specified folder.
+		/// </summary>
+		/// <param name="type">The ScriptableObject type to check.</param>
+		/// <param name="selectionParams">Selection parameters including the assets folder path.</param>
+		/// <returns>True if at least one asset of the type exists in the folder; otherwise false.</returns>
 		private static bool IsInAssetsFolder(Type type, SelectionParams selectionParams) =>
 			AssetDatabase.FindAssets($"t:{type.Name}", new[] {selectionParams.assetsFolderPath}).Any();
 
+		/// <summary>
+		/// Scans all loaded assemblies (excluding Unity’s) and returns those containing non-abstract ScriptableObject types with assets in the specified folder.
+		/// </summary>
+		/// <param name="selectionParams">Selection parameters including the assets folder path.</param>
+		/// <returns>List of assemblies meeting the criteria.</returns>
 		private static List<Assembly> GetAssembliesWithScriptableObjects(SelectionParams selectionParams)
 		{
 			return AppDomain.CurrentDomain.GetAssemblies()
