@@ -159,9 +159,19 @@ namespace ScriptableObjectEditor
 			int dropIndex = columnManager.GetDropIndex();
 
 			EditorGUILayout.Space();
-			scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+			int colCount = columnManager.ColumnCount;
+			float sumWidths = columnManager.Columns.Sum(c => c.Width);
+			float totalPad = Mathf.Max(0, colCount - 1) * cellPadding;
+			float contentW = sumWidths + totalPad;
 
-			DrawHeaders(columnManager.ColumnCount, dropIndex);
+			scrollPosition = EditorGUILayout.BeginScrollView(
+				scrollPosition, true, true
+			);
+
+			GUILayout.BeginHorizontal(GUILayout.Width(contentW));
+			GUILayout.BeginVertical();
+
+			DrawHeaders(colCount, columnManager.GetDropIndex());
 			int drop = columnManager.CurrentDropIndex;
 			if (drop >= 0 && drop < columnManager.ColumnCount)
 			{
@@ -174,6 +184,8 @@ namespace ScriptableObjectEditor
 				DrawPropertiesGrid();
 			}
 
+			GUILayout.EndVertical();
+			GUILayout.EndHorizontal();
 			EditorGUILayout.EndScrollView();
 		}
 
@@ -280,13 +292,20 @@ namespace ScriptableObjectEditor
 
 		private void DrawHeaders(int totalCols, int dropIndex)
 		{
-			using (new SOERegion())
+			// Compute total content width (columns + paddings)
+			float totalColumnWidth = columnManager.Columns.Sum(c => c.Width);
+			float totalPadding = Mathf.Max(0, totalCols - 1) * cellPadding;
+			float contentWidth = totalColumnWidth + totalPadding;
+
+			// Begin a fixed-width container so headers never shrink below contentWidth
+			GUILayout.BeginHorizontal(GUILayout.Width(contentWidth));
 			{
 				for (int i = 0; i < totalCols; i++)
 				{
 					DrawHeaderCell(i);
-					if (i < columnManager.Columns.Count - 1)
+					if (i < totalCols - 1)
 						GUILayout.Space(cellPadding);
+
 					if (i == dropIndex)
 					{
 						Rect hdrRect = GUILayoutUtility.GetLastRect();
@@ -294,6 +313,7 @@ namespace ScriptableObjectEditor
 					}
 				}
 			}
+			GUILayout.EndHorizontal();
 		}
 
 		private void DrawHeaderCell(int columnIndex)

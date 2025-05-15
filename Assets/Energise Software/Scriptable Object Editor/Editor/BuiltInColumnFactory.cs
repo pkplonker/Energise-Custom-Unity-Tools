@@ -17,7 +17,7 @@ namespace ScriptableObjectEditor
 		}
 
 		private static Column CreateCopy() => new(
-			Column.ColumnType.BuiltIn, "Copy", 35f, null,
+			Column.ColumnType.BuiltIn, "Copy", 65f, null,
 			(obj, toAdd, toRemove, opts) =>
 			{
 				if (GUILayout.Button(
@@ -26,7 +26,7 @@ namespace ScriptableObjectEditor
 			});
 
 		private static Column CreateDelete() => new(
-			Column.ColumnType.BuiltIn, "Delete", 50f, null,
+			Column.ColumnType.BuiltIn, "Delete", 80f, null,
 			(obj, toAdd, toRemove, opts) =>
 			{
 				if (GUILayout.Button(

@@ -22,13 +22,13 @@ namespace ScriptableObjectEditor
 		private bool isReordering;
 		private float dragStartMouseX;
 		private float dragStartWidth;
-		private int _currentDropIndex = -1;
+		private int currentDropIndex = -1;
 		private int sortColumnIndex = -1;
 		private bool sortAscending = true;
 
-		public int CurrentDropIndex => _currentDropIndex;
+		public int CurrentDropIndex => currentDropIndex;
 		public int ColumnCount => Columns.Count;
-		
+
 		/// <summary>
 		/// Sets up default built-in columns.
 		/// </summary>
@@ -263,7 +263,7 @@ namespace ScriptableObjectEditor
 							isReordering = true;
 						if (isReordering)
 						{
-							_currentDropIndex = GetColumnIndexAt(e.mousePosition.x);
+							currentDropIndex = GetColumnIndexAt(e.mousePosition.x);
 							repaintCallback();
 						}
 
@@ -285,11 +285,11 @@ namespace ScriptableObjectEditor
 
 					if (isReordering && reorderSourceColumn == columnIndex)
 					{
-						if (_currentDropIndex >= 0 && _currentDropIndex != reorderSourceColumn)
-							ReorderColumn(reorderSourceColumn, _currentDropIndex, selectedTypeIndex);
+						if (currentDropIndex >= 0 && currentDropIndex != reorderSourceColumn)
+							ReorderColumn(reorderSourceColumn, currentDropIndex, selectedTypeIndex);
 						isReordering = false;
 						reorderSourceColumn = -1;
-						_currentDropIndex = -1;
+						currentDropIndex = -1;
 						repaintCallback();
 						e.Use();
 					}
@@ -305,7 +305,7 @@ namespace ScriptableObjectEditor
 		/// </summary>
 		public string GetSortedLabel(int index)
 			=> Columns[index].Label + (sortColumnIndex == index ? (sortAscending ? " ▲" : " ▼") : "");
-		
+
 		private Column CreatePropertyColumn(string path)
 			=> new(
 				Column.ColumnType.Property,
