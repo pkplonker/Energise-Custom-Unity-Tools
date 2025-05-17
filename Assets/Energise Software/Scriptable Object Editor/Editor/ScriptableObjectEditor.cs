@@ -87,7 +87,7 @@ namespace ScriptableObjectEditor
 		{
 			Initalise();
 		}
-		
+
 		/// <summary>
 		/// Loads all ScriptableObjects of the specified type, sets up property columns, and applies sorting.
 		/// </summary>
@@ -164,7 +164,7 @@ namespace ScriptableObjectEditor
 					}
 				}
 			}
-			
+
 			EditorGUILayout.Space();
 			int colCount = columnManager.ColumnCount;
 			float sumWidths = columnManager.Columns.Sum(c => c.Width);
@@ -376,154 +376,163 @@ namespace ScriptableObjectEditor
 			var toAdd = new List<ScriptableObject>();
 			var toRemove = new List<ScriptableObject>();
 			int rowIndex = 0;
-
-			foreach (var obj in TypeHandler.CurrentTypeObjects)
+			AssetDatabase.StartAssetEditing();
+			try
 			{
-				using (new SOERegion())
+				foreach (var obj in TypeHandler.CurrentTypeObjects)
 				{
-					for (int i = 0; i < columnManager.ColumnCount; i++)
+					using (new SOERegion())
 					{
-						var col = columnManager.Columns[i];
-
-						var opts = new[] {GUILayout.Width(col.Width), GUILayout.Height(18)};
-
-						if (col.ColType == Column.ColumnType.BuiltIn)
+						for (int i = 0; i < columnManager.ColumnCount; i++)
 						{
-							col.DrawAction(obj, toAdd, toRemove, opts);
-						}
-						else
-						{
-							var so = new SerializedObject(obj);
-							var prop = so.FindProperty(col.PropertyPath);
-							if (prop == null)
+							var col = columnManager.Columns[i];
+
+							var opts = new[] {GUILayout.Width(col.Width), GUILayout.Height(18)};
+
+							if (col.ColType == Column.ColumnType.BuiltIn)
 							{
-								GUILayout.Label(GUIContent.none, opts);
+								col.DrawAction(obj, toAdd, toRemove, opts);
 							}
 							else
 							{
-								EditorGUI.BeginChangeCheck();
-								switch (prop.propertyType)
+								var so = new SerializedObject(obj);
+								var prop = so.FindProperty(col.PropertyPath);
+								if (prop == null)
 								{
-									case SerializedPropertyType.Float:
-										float newF = EditorGUILayout.FloatField(prop.floatValue, opts);
-										if (EditorGUI.EndChangeCheck())
-											foreach (int idx in selectedRows)
-											{
-												var tgt = new SerializedObject(TypeHandler.CurrentTypeObjects[idx]);
-												var p = tgt.FindProperty(col.PropertyPath);
-												p.floatValue = newF;
-												tgt.ApplyModifiedProperties();
-											}
-
-										break;
-									case SerializedPropertyType.Integer:
-										int newI = EditorGUILayout.IntField(prop.intValue, opts);
-										if (EditorGUI.EndChangeCheck())
-											foreach (int idx in selectedRows)
-											{
-												var tgt = new SerializedObject(TypeHandler.CurrentTypeObjects[idx]);
-												var p = tgt.FindProperty(col.PropertyPath);
-												p.intValue = newI;
-												tgt.ApplyModifiedProperties();
-											}
-
-										break;
-									case SerializedPropertyType.String:
-										string newS = EditorGUILayout.TextField(prop.stringValue, opts);
-										if (EditorGUI.EndChangeCheck())
-											foreach (int idx in selectedRows)
-											{
-												var tgt = new SerializedObject(TypeHandler.CurrentTypeObjects[idx]);
-												var p = tgt.FindProperty(col.PropertyPath);
-												p.stringValue = newS;
-												tgt.ApplyModifiedProperties();
-											}
-
-										break;
-									case SerializedPropertyType.Color:
-										Color newC = EditorGUILayout.ColorField(GUIContent.none, prop.colorValue, true,
-											true, false, opts);
-										if (EditorGUI.EndChangeCheck())
-											foreach (int idx in selectedRows)
-											{
-												var tgt = new SerializedObject(TypeHandler.CurrentTypeObjects[idx]);
-												var p = tgt.FindProperty(col.PropertyPath);
-												p.colorValue = newC;
-												tgt.ApplyModifiedProperties();
-											}
-
-										break;
-									case SerializedPropertyType.ObjectReference:
+									GUILayout.Label(GUIContent.none, opts);
+								}
+								else
+								{
+									EditorGUI.BeginChangeCheck();
+									switch (prop.propertyType)
 									{
-										Rect fieldRect = GUILayoutUtility.GetRect(col.Width, 18);
+										case SerializedPropertyType.Float:
+											float newF = EditorGUILayout.FloatField(prop.floatValue, opts);
+											if (EditorGUI.EndChangeCheck())
+												foreach (int idx in selectedRows)
+												{
+													var tgt = new SerializedObject(TypeHandler.CurrentTypeObjects[idx]);
+													var p = tgt.FindProperty(col.PropertyPath);
+													p.floatValue = newF;
+													tgt.ApplyModifiedProperties();
+												}
 
-										EditorGUI.BeginChangeCheck();
-										UnityEngine.Object newObj = EditorGUI.ObjectField(
-											fieldRect,
-											prop.objectReferenceValue,
-											typeof(UnityEngine.Object),
-											false
-										);
-										if (EditorGUI.EndChangeCheck())
+											break;
+										case SerializedPropertyType.Integer:
+											int newI = EditorGUILayout.IntField(prop.intValue, opts);
+											if (EditorGUI.EndChangeCheck())
+												foreach (int idx in selectedRows)
+												{
+													var tgt = new SerializedObject(TypeHandler.CurrentTypeObjects[idx]);
+													var p = tgt.FindProperty(col.PropertyPath);
+													p.intValue = newI;
+													tgt.ApplyModifiedProperties();
+												}
+
+											break;
+										case SerializedPropertyType.String:
+											string newS = EditorGUILayout.TextField(prop.stringValue, opts);
+											if (EditorGUI.EndChangeCheck())
+												foreach (int idx in selectedRows)
+												{
+													var tgt = new SerializedObject(TypeHandler.CurrentTypeObjects[idx]);
+													var p = tgt.FindProperty(col.PropertyPath);
+													p.stringValue = newS;
+													tgt.ApplyModifiedProperties();
+												}
+
+											break;
+										case SerializedPropertyType.Color:
+											Color newC = EditorGUILayout.ColorField(GUIContent.none, prop.colorValue,
+												true,
+												true, false, opts);
+											if (EditorGUI.EndChangeCheck())
+												foreach (int idx in selectedRows)
+												{
+													var tgt = new SerializedObject(TypeHandler.CurrentTypeObjects[idx]);
+													var p = tgt.FindProperty(col.PropertyPath);
+													p.colorValue = newC;
+													tgt.ApplyModifiedProperties();
+												}
+
+											break;
+										case SerializedPropertyType.ObjectReference:
 										{
-											foreach (int idx in selectedRows)
+											Rect fieldRect = GUILayoutUtility.GetRect(col.Width, 18);
+
+											EditorGUI.BeginChangeCheck();
+											UnityEngine.Object newObj = EditorGUI.ObjectField(
+												fieldRect,
+												prop.objectReferenceValue,
+												typeof(UnityEngine.Object),
+												false
+											);
+											if (EditorGUI.EndChangeCheck())
 											{
-												var tgt = new SerializedObject(TypeHandler.CurrentTypeObjects[idx]);
-												var p = tgt.FindProperty(col.PropertyPath);
-												p.objectReferenceValue = newObj;
-												tgt.ApplyModifiedProperties();
+												foreach (int idx in selectedRows)
+												{
+													var tgt = new SerializedObject(TypeHandler.CurrentTypeObjects[idx]);
+													var p = tgt.FindProperty(col.PropertyPath);
+													p.objectReferenceValue = newObj;
+													tgt.ApplyModifiedProperties();
+												}
 											}
 										}
-									}
-										break;
-									default:
-										EditorGUILayout.PropertyField(prop, GUIContent.none, opts);
-										if (EditorGUI.EndChangeCheck())
-											foreach (int idx in selectedRows)
-											{
-												var tgt = new SerializedObject(TypeHandler.CurrentTypeObjects[idx]);
-												tgt.ApplyModifiedProperties();
-											}
+											break;
+										default:
+											EditorGUILayout.PropertyField(prop, GUIContent.none, opts);
+											if (EditorGUI.EndChangeCheck())
+												foreach (int idx in selectedRows)
+												{
+													var tgt = new SerializedObject(TypeHandler.CurrentTypeObjects[idx]);
+													tgt.ApplyModifiedProperties();
+												}
 
-										break;
+											break;
+									}
 								}
 							}
+
+							if (i < columnManager.Columns.Count - 1)
+								GUILayout.Space(cellPadding);
+						}
+					}
+
+					Rect rowRect = GUILayoutUtility.GetLastRect();
+					bool isSelected = selectedRows.Contains(rowIndex);
+					if (Event.current.type == EventType.Repaint && isSelected)
+						EditorGUI.DrawRect(rowRect, new Color(0.2f, 0.5f, 1f, 0.1f));
+
+					if (Event.current.type == EventType.MouseDown && rowRect.Contains(Event.current.mousePosition))
+					{
+						if (Event.current.shift && lastClickedRow >= 0)
+						{
+							int start = Mathf.Min(lastClickedRow, rowIndex);
+							int end = Mathf.Max(lastClickedRow, rowIndex);
+							for (int i = start; i <= end; i++) selectedRows.Add(i);
+						}
+						else if (Event.current.control)
+						{
+							if (!selectedRows.Remove(rowIndex))
+								selectedRows.Add(rowIndex);
+						}
+						else
+						{
+							selectedRows.Clear();
+							selectedRows.Add(rowIndex);
 						}
 
-						if (i < columnManager.Columns.Count - 1)
-							GUILayout.Space(cellPadding);
+						lastClickedRow = rowIndex;
+						Event.current.Use();
 					}
+
+					rowIndex++;
 				}
-
-				Rect rowRect = GUILayoutUtility.GetLastRect();
-				bool isSelected = selectedRows.Contains(rowIndex);
-				if (Event.current.type == EventType.Repaint && isSelected)
-					EditorGUI.DrawRect(rowRect, new Color(0.2f, 0.5f, 1f, 0.1f));
-
-				if (Event.current.type == EventType.MouseDown && rowRect.Contains(Event.current.mousePosition))
-				{
-					if (Event.current.shift && lastClickedRow >= 0)
-					{
-						int start = Mathf.Min(lastClickedRow, rowIndex);
-						int end = Mathf.Max(lastClickedRow, rowIndex);
-						for (int i = start; i <= end; i++) selectedRows.Add(i);
-					}
-					else if (Event.current.control)
-					{
-						if (!selectedRows.Remove(rowIndex))
-							selectedRows.Add(rowIndex);
-					}
-					else
-					{
-						selectedRows.Clear();
-						selectedRows.Add(rowIndex);
-					}
-
-					lastClickedRow = rowIndex;
-					Event.current.Use();
-				}
-
-				rowIndex++;
+			}
+			finally
+			{
+				AssetDatabase.StopAssetEditing();
+				AssetDatabase.SaveAssets();
 			}
 
 			SOEIO.AddAssets(toAdd);

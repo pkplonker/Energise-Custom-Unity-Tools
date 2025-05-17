@@ -5,8 +5,123 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="89339a32-08e6-4032-8db2-a389fee13585" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/Editor/ColumnManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/Editor/ColumnManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.EnergiseCustomTooling/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.EnergiseCustomTooling/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/Editor/BuiltInColumnFactory.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/Editor/BuiltInColumnFactory.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/Editor/ScriptableObjectEditor.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/Editor/ScriptableObjectEditor.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/Camera.prefab" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/Camera.prefab.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/New Material.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/New Material.mat.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/1.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/1.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Derived 1.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Derived 1.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Derived 1_Copy1.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Derived 1_Copy1.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Derived.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Derived.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Derived_Copy1.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Derived_Copy1.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Derived_Copy2.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Derived_Copy2.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/NoDefSO 1.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/NoDefSO 1.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/NoDefSO 2.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/NoDefSO 2.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/NoDefSO.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/NoDefSO.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/NoDefSO12.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/NoDefSO12.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/NoDefSO123.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/NoDefSO123.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/NoDefSO124.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/NoDefSO124.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/SeperateAssembly 12.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/SeperateAssembly 12.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/SeperateAssembly.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/SeperateAssembly.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/TestScriptableObject 1.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/TestScriptableObject 1.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/TestScriptableObject 2.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/TestScriptableObject 2.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/TestScriptableObject.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/TestScriptableObject.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/TestScriptableObject_New 1.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/TestScriptableObject_New 1.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/TestScriptableObject_New 2.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/TestScriptableObject_New 2.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/TestScriptableObject_New.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/TestScriptableObject_New.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1 1.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1 1.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1 2.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1 2.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1_Copy1.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1_Copy1.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1_Copy1_Copy1.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1_Copy1_Copy1.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1_Copy1_Copy1_Copy1.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1_Copy1_Copy1_Copy1.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1_Copy1_Copy1_Copy1_Copy1.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1_Copy1_Copy1_Copy1_Copy1.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1_Copy1_Copy1_Copy1_Copy2.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1_Copy1_Copy1_Copy1_Copy2.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1_Copy1_Copy1_Copy1_Copy3.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1_Copy1_Copy1_Copy1_Copy3.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1_Copy1_Copy1_Copy1_Copy4.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1_Copy1_Copy1_Copy1_Copy4.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1_Copy1_Copy1_Copy1_Copy5.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1_Copy1_Copy1_Copy1_Copy5.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1_Copy1_Copy1_Copy1_Copy6.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type1_Copy1_Copy1_Copy1_Copy6.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type2 (2).asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type2 (2).asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type2 (2)_Copy1.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type2 (2)_Copy1.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type2 (2)_Copy1_Copy1.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type2 (2)_Copy1_Copy1.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type2 (2)_Copy1_Copy1_Copy1.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type2 (2)_Copy1_Copy1_Copy1.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type2 (2)_Copy1_Copy1_Copy1_Copy1.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type2 (2)_Copy1_Copy1_Copy1_Copy1.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type2.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type2.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type2_Copy1.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type2_Copy1.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type2_Copy2.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type2_Copy2.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type2_Copy3.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type2_Copy3.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type2_Copy3_Copy1.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type2_Copy3_Copy1.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type3.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type3.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type4.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type4.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type5.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type5.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type6.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/ScriptableObjects/Type6.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/Scripts.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/Scripts/ShTest.asmdef" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/Scripts/ShTest.asmdef.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/Scripts/TestScriptableObject.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/Scripts/TestScriptableObject.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/Scripts/TestScriptableObjectAbstract.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/Scripts/TestScriptableObjectAbstract.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/Scripts/TestScriptableObjectDerived.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/Scripts/TestScriptableObjectDerived.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/Scripts/TestScriptableObjectTwo.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/Scripts/TestScriptableObjectTwo.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/Scripts2.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/Scripts2/SeperateAssembly.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/Scripts2/SeperateAssembly.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/Scripts2/ShTest2.asmdef" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Energise Software/Scriptable Object Editor/SOEDev/Scripts2/ShTest2.asmdef.meta" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -119,7 +234,7 @@
       <updated>1746224202112</updated>
       <workItem from="1746224202818" duration="3148000" />
       <workItem from="1746822908001" duration="27695000" />
-      <workItem from="1747342964630" duration="2238000" />
+      <workItem from="1747342964630" duration="3180000" />
     </task>
     <servers />
   </component>

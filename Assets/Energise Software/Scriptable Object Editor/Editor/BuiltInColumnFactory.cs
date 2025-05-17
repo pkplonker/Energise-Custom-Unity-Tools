@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -46,19 +47,26 @@ namespace ScriptableObjectEditor
 		/// <summary>
 		/// Creates the “Instance Name” built-in column which displays and allows renaming of the asset.
 		/// </summary>
-		private static Column CreateInstanceName() => new(
-			Column.ColumnType.BuiltIn, "Instance Name", 150f, null,
-			(obj, toAdd, toRemove, opts) =>
-			{
-				var path = AssetDatabase.GetAssetPath(obj);
-				var oldName = obj.name;
-				var newName = EditorGUILayout.TextField(oldName, opts);
-				if (newName != oldName)
+		private static Column CreateInstanceName()
+		{
+			return new Column(
+				Column.ColumnType.BuiltIn,
+				"Instance Name",
+				150f,
+				null,
+				(obj, toAdd, toRemove, opts) =>
 				{
-					AssetDatabase.RenameAsset(path, newName);
-					AssetDatabase.SaveAssets();
-					obj.name = newName;
-				}
-			});
+					var path = AssetDatabase.GetAssetPath(obj);
+					var fileName = Path.GetFileNameWithoutExtension(path);
+
+					EditorGUI.BeginChangeCheck();
+					var newName = EditorGUILayout.DelayedTextField(fileName, opts);
+					if (EditorGUI.EndChangeCheck() && newName != fileName)
+					{
+						AssetDatabase.RenameAsset(path, newName);
+						obj.name = newName;
+					}
+				});
+		}
 	}
 }
